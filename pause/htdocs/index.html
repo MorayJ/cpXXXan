@@ -1,0 +1,356 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head><title/></head>
+  <body>
+    <dl>
+      <dt><b>2009-03-14</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Pause code moves to <a href="git://github.com/andk/pause.git">git://github.com/andk/pause.git</a>
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2008-04-19</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Thanks to RJOOP, Pause gets a CAcert certificate. 
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2007-12-18</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Upgrade perl to 5.10.0. It has run for several days on
+            5.10.0-RC2 just fine. A fallback to the old perl will run
+            on the ports 8443 for https and 8000 for http for a short
+            while.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2007-12-08</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Upgrade mysql from 4.0.24-10sarge2 to 5.0.32-7etch1. No,
+            it went not as smoothly as it should, PAUSE was down for
+            about two and a half hours.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2006-12-22</b></dt>
+      <dd>
+        <ul>
+          <li>
+            The least intuitive <i>Change Permissions</i> page got a
+            couple of scrolling lists added today to hopefully make it
+            easier for authors to manage their permissions.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2006-05-01</b></dt>
+      <dd>
+        <ul>
+          <li>
+            The pause daemon starts to trigger an indexer run during
+            the upload process with the effect that indexer reports
+            are sent within a few minutes after upload instead of once
+            per hour.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2006-03-28</b></dt>
+      <dd>
+        <ul>
+          <li>
+            <table>
+              <tr>
+                <td>
+                  <a href="/pause/hw-pause-2006.jpg">
+                    <img src="/pause/hw-pause-2006-small.jpg" width="300"
+                         height="47" alt="new hardware: Photo by Wolfram Schneider"/>
+                    </a><br/>
+                    <span style="font-size: xx-small">Photo by Wolfram Schneider</span>
+                </td>
+                <td>
+                  <pre>
+CPU speed      x 4
+number of CPUs x 2
+memory         x 8
+disk space     x 8
+disk speed     x 2.5
+                  </pre>
+                </td>
+              </tr>
+            </table>
+            <p>
+              Thanks to our generous sponsors at <a
+              href="http://www.fiz-chemie.de/">fiz-chemie</a>, we have
+              new hardware: Dual Pentium 3 GHz, 2 GB memory, and 3ware
+              RAID should speed up the indexing and open lots of new
+              opportunities to improve the quality of service.
+            </p>
+            <p>
+              Lots of Thanks to 
+Andreas,
+Gregor, 
+Heike, 
+Jürgen,
+Michael, 
+Robert, and
+Wolfram.
+            </p>
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-12-11</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Subversion repository finally switched to FSFS.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-12-10</b></dt>
+      <dd>
+        <ul>
+          <li>
+            About 300 reindex runs have been scheduled to fix bug #16293
+            on rt.cpan.org.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-11-25</b></dt>
+      <dd>
+        <ul>
+          <li>
+            The indexer now has muchly improved multidot version
+            support via version.pm. And a new, pretty stupid page is
+            added in SVN rev 677: 'Reset Version'.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-11-09</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Upgrade CPAN::Checksums to 1.039 which means from now we
+            have SHA256 in the CHECKSUMS files (Thanks to Steve Peters
+            for the patch to CPAN::Checksums).
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-07-31</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Upgrade apache to 1.3.33, perl to 5.8.7.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-04-19</b></dt>
+      <dd>
+        <ul>
+          <li>
+            Added support for the META.yml field <i>provides</i>.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2005-01-09</b></dt>
+      <dd>
+        <ul>
+          <li>
+            New GnuPG keys for both the <a
+            href="http://keyserver.veridis.com:11371/pks/lookup?template=netensearch%2Cnetennomatch%2Cnetenerror&amp;search=pause%40pause.perl.org&amp;op=index&amp;fingerprint=on&amp;submit=Get+List">PAUSE
+            Batch Signing Key</a> and <a
+            href="http://keyserver.veridis.com:11371/pks/lookup?template=netensearch%2Cnetennomatch%2Cnetenerror&amp;search=andreas.koenig%40anima.de&amp;op=index&amp;fingerprint=on&amp;submit=Get+List">myself</a>.
+          </li>
+        </ul>
+      </dd>
+      <dt><b>2003-11-27</b></dt>
+      <dd>
+        <ul>
+          <li>PAUSE gets a new sponsor <a
+          href="http://www.fiz-chemie.de/">FIZ-Chemie</a> and moves to
+          their facilities at Franklinstraße.</li>
+        </ul>
+      </dd>
+      <dt><b>2003-08-01</b></dt>
+      <dd>
+        <ul>
+          <li>The indexer now partially supports META.yml files.
+          Currently the only keyword that gets interpreted is
+          <i>private</i>. Others to follow as demand arises.</li>
+        </ul>
+      </dd>
+      <dt><b>2003-07-26</b></dt>
+      <dd>
+        <ul>
+          <li>Welcome Debian! Thanks to RedHat, that has done a
+          marvelous job over the years, but in the end it was just
+          missing <i>apt-get</i> functionality. It was an amazing
+          experience to install an OS remotely. Thanks to Erik
+          Jacobson for <a
+          href="http://trilldev.sourceforge.net/files/remotedeb.html">writing
+          up</a> howto accomplish that.</li>
+        </ul>
+      </dd>
+      <dt><b>2003-03-10</b></dt>
+      <dd>
+        <ul>
+          <li>Finally all software on PAUSE runs under 5.8.0.</li>
+        </ul>
+      </dd>
+      <dt><b>2003-02-10</b></dt>
+      <dd>
+        <ul>
+          <li>The indexer starts to send messages to uploading authors
+            about the indexing job, especially tells them the reason why
+            something was not indexed.</li>
+        </ul>
+      </dd>
+      <dt><b>2003-01-01</b></dt>
+      <dd>
+        <ul>
+          <li>PAUSE has a new sponsor, <b><a
+                href="http://www.loomes.de/">Loomes</a></b>, who I'd like to
+            thank for their generosity. I'd like to take the opportunity
+            to also say a big <b>Thank you</b> to our old sponsor,
+            Speedlink, which was hit by the economic downturn.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-12-23</b></dt>
+      <dd>
+        <ul>
+          <li>Nearly all of the software running on PAUSE is now put
+            into a <a
+              href="https://pause.perl.org:5460/svn/pause/trunk">subversion
+              repository</a>.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-07-25</b></dt>
+      <dd>
+        <ul>
+          <li>Running under perl 5.8.0 for a week without segfaults.
+            Turning off the fallback-to-5.6.1-server on port
+            8443.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-07-18</b></dt>
+      <dd>
+        <ul>
+          <li>Upgrade to Linux 2.4.18.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-06-14</b></dt>
+      <dd>
+        <ul>
+          <li><a
+              href="http://mathforum.org/epigone/modperl/zhoolamgheld">Segfaults
+              fixed by dougm.</a></li>
+        </ul>
+      </dd>
+      <dt><b>2002-06-08</b></dt>
+      <dd>
+        <ul>
+          <li>Segfaults continue but are not yet reproducable. Until
+            this is fixed, PAUSE will be running on four ports: 80 and 443
+            with a bleading edge perl and 8000 and 8443 with
+            good old perl-5.6.1.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-06-05</b></dt>
+      <dd>
+        <ul>
+          <li>As the segfaults were in conjunction with a pipe to
+            sendmail I decided to upgrade sendmail first and then I made a
+            mistake during the upgrade and sendmail didn't work for the
+            rest of the day. Seems to be fixed now. Sorry for any
+            inconvenience caused by that.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-06-03</b></dt>
+      <dd>
+        <ul>
+          <li>Back to 5.6.1. Segfaults subject to further investigation.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-06-02</b></dt>
+      <dd>
+        <ul>
+          <li>mod_perl server runs 5.8.0-RC1, apache 1.3.24 and mod_perl
+            1.27. The other daemons and utilities are still running under
+            perl-5.6.1.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-04-27</b></dt>
+      <dd>
+        <ul>
+          <li>Uploading to subdirectories implemented.</li>
+          <li>CSS-ification of the menus.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-04-22</b></dt>
+      <dd>
+        <ul>
+          <li>New <i>Change Permissions</i> feature to share control over uploading/indexing.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-04-10</b></dt>
+      <dd>
+        <ul>
+          <li><i>View Permissions</i> now knows about three types of maintainership and displays them in a linked table.</li>
+          <li>mysql up to 2.23.49.</li>
+        </ul>
+      </dd>
+      <dt><b>2002-03-24</b></dt>
+      <dd>
+        <ul><li>New menu items <i>View Permissions</i> and <i>Force Reindexing</i>.</li></ul>
+      </dd>
+
+
+    </dl>
+
+
+    <h3>PAUSE Information</h3>
+
+    <ul>
+      <li>The general information about the PAUSE is on CPAN in the file
+        <a
+          href="http://www.perl.com/CPAN/modules/04pause.html">CPAN/modules/04pause.html</a>.</li>
+
+  <li>The programmed pages are currently at <a
+      href="/pause/query">/pause/query</a> and the authenticated programmed
+    pages are at <a href="/pause/authenquery">/pause/authenquery</a>.</li>
+
+  <li>In the deprecated <a href="/admin.html" >old times</a> PAUSE
+    didn't have an application framework, it just had a couple of CGI-like
+    modperl scripts.</li>
+
+  <li>Lost your password? Go straight to <a
+      href="/pause/query?ACTION=mailpw">/pause/query?ACTION=mailpw</a></li>
+
+  <li>The news that have been on <i>this</i> page in the past, are
+    collected in PAUSE's <a href="/pause/query?ACTION=pause_06history">history</a> file.</li>
+
+  <li>If you're looking for your nearest CPAN site, go to <a
+      href="http://www.perl.com/CPAN/">www.perl.com's multiplexor</a>. The
+    CPAN master site is <a
+      href="ftp://ftp.funet.fi/pub/languages/perl/CPAN">funet in
+      Finland</a>.</li>
+  
+</ul>
+
+  
+  <hr />
+  <a href="mailto:koenig@franz.ww.TU-Berlin.DE">Andreas K&#x00f6;nig</a><br />
+  $Id$
+
+</body>
+</html>
+<!--
+Local Variables:
+mode: nxml
+End:
+-->

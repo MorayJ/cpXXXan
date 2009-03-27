@@ -1,0 +1,821 @@
+#!/usr/local/bin/perl -- -*- mode: cperl -*-
+
+
+# predeclare
+sub mypause_daemon_inspector::loop ();
+
+
+
+my $VERSION = "1047";
+my $Id = qq!paused, v$VERSION!;
+
+use lib "/home/k/PAUSE/lib";
+
+use DBI ();
+use Fcntl qw(:flock);
+use File::Path ();
+use Getopt::Long;
+use HTTP::Date ();
+use HTTP::Status ();
+use IO::File ();
+use LWP ();
+use MD5 ();
+use Mail::Send ();
+use PAUSE ();
+use PAUSE::MailAddress ();
+use POSIX ":sys_wait_h";
+use URI::URL ();
+
+use strict;
+use vars qw(%Opt);
+
+GetOptions(\%Opt,qw(pidfile=s)) or die;
+
+my $pidfile = $Opt{pidfile} or die;
+my $lockfh;
+if (open $lockfh, "+>>", $pidfile) {
+  if (flock $lockfh, LOCK_EX|LOCK_NB) {
+    truncate $lockfh, 0 or die;
+    seek $lockfh, 0, 0;
+    # because we must not close, we need to flush
+    my $ofh = select $lockfh;
+    $|=1;
+    print $lockfh $$;
+    select $ofh;
+  } else {
+    die "other paused job running, ".
+        "will not run at the same time";
+  }
+} else {
+  die "Could not open pidfile[$pidfile]: $!";
+}
+# must no close $lockfh
+
+$SIG{HUP} = \&sighup;
+$SIG{TERM} = $SIG{INT} = \&sigtermint;
+
+sub reaper {
+  my $child;
+  # If a second child exits while in the signal handler caused by the
+  # first death, we won’t get another signal. So must loop here else
+  # we will leave the unreaped child as a zombie. And the next time
+  # two children exit we get another zombie. And so on.
+  while (($child = waitpid(-1,WNOHANG)) > 0){
+    mypause_daemon_inspector->logge("Debug: Reaped child[$child]");
+  }
+  $SIG{CHLD} = \&reaper;  # still loathe sysV
+}
+
+sub sigtermint {
+  mypause_daemon_inspector->logge("Info: Stopping");
+  $mypause_daemon_inspector::Signal++;
+  $mypause_daemon_inspector::Terminated++;
+}
+
+sub sighup {
+  $mypause_daemon_inspector::Signal++;
+}
+
+sub restart {
+  mypause_daemon_inspector->logge("Info: Going to exec $^X $0");
+  exec $^X, $0, "--pidfile=$pidfile";
+}
+
+umask 0002;
+
+mypause_daemon_inspector->logge("Info: Starting in a new process");
+
+while () {
+  mypause_daemon_inspector::loop();
+  last if $mypause_daemon_inspector::Terminated;
+  my $sleep = $PAUSE::Config->{SLEEP};
+  # sleep $did_something ? 5 : $PAUSE::Config->{SLEEP};
+  $0 = "paused: sleeping $sleep";
+  sleep $sleep;
+}
+
+exit;
+
+#### SUBROUTINES ####
+
+package mypause_send_mail;
+
+our %hp_inside;
+
+sub send {
+  my($self,$header,$blurb) = @_;
+  my(%tosubj);
+  for my $h (qw(To Subject)) {
+    $tosubj{$h} = delete $header->{$h};
+  }
+  my $msg = Mail::Send->new(%tosubj);
+  if (%$header) {
+    $msg->add(%$header);
+  }
+  $msg->add("From" => "PAUSE <$PAUSE::Config->{UPLOAD}>") unless exists $header->{From};
+  $msg->add("Content-Type" => "Text/Plain; Charset=UTF-8");
+  $msg->add("MIME-Version" => "1.0");
+  $msg->add("Content-Transfer-Encoding" => "8bit");
+  my $fh = $msg->open('sendmail');
+  print $fh $blurb;
+  close $fh;
+}
+
+package mypause_daemon_inspector;
+
+use List::Util qw(max);
+
+# package mypause_daemon_inspector
+sub loop () { # we're NOT called as a method
+
+
+  $0 = "paused: now in loop()";
+
+  my $self = bless {}, __PACKAGE__;
+
+  our $UA;
+  unless ($UA) {
+    $UA =  LWP::UserAgent->new;
+    $UA->timeout($PAUSE::Config->{TIMEOUT}) if $PAUSE::Config->{TIMEOUT};
+  }
+  our $zcat;
+  unless ($zcat) {
+    $zcat = "/bin/zcat";
+    die "no executable zcat" unless -x $zcat;
+  }
+  our $gzip;
+  unless ($gzip) {
+    $gzip = "/bin/gzip";
+    die "no executable gzip" unless -x $gzip;
+  }
+
+  my($dbh,$sth,$sth2,$query);
+
+  my $now    = time ;
+  $self->{NOW} = $now;
+  my $old = $now - 86400*60;
+  unless ( $dbh = DBI->connect(
+			       $PAUSE::Config->{MOD_DATA_SOURCE_NAME},
+			       $PAUSE::Config->{MOD_DATA_SOURCE_USER},
+			       $PAUSE::Config->{MOD_DATA_SOURCE_PW},
+			       { RaiseError => 0 }
+			      ) ) {
+    $self->logge("Alert: $DBI::errstr");
+    return; # let them sleep or whatever
+  }
+  $self->{DBH} = $dbh;
+
+  # Not yet known is how it could happen that 5 uploads came without a
+  # userid. We didn't catch it:-(
+  $query = qq{SELECT *
+              FROM uris
+	      WHERE length(userid) > 1
+                AND ( dverified=''
+                      OR
+                      dverified+0 > ?
+                    ) }; #};
+
+  $sth = $dbh->prepare($query);
+  if ( $sth->execute($old) ) {
+    my $rows = $sth->rows;
+    # $self->logge("Info: rows[$rows]old[$old] to process");
+  } else {
+    $self->logge("Alert: $DBI::errstr");
+    return;
+  }
+  my $sql = qq{SELECT fullname, asciiname
+               FROM users
+               WHERE userid=?};
+  $sth2 = $dbh->prepare($sql);
+  $self->{STH2} = $sth2;
+
+  # we have a continue block, so be careful with the scope
+  my($hash, $hash_orig);
+ URIRECORD: while ( $hash  = $sth->fetchrow_hashref ) {
+    $self->{URIRECORD} = $hash;
+    if ($] > 5.007) {
+      require Encode;
+      for my $k (keys %$hash) {
+        defined && /[^\000-\177]/ && Encode::_utf8_on($_) for $hash->{$k};
+      }
+    }
+    $hash_orig = {%$hash};
+
+    if ( $hash->{uriid} =~ s/ (.*) \.Z$ /$1.gz/x ) {
+      $query = "DELETE FROM uris WHERE uriid = '$1.Z'";
+      $self->logge("Info: Will try to get rid of the .Z file. Will not try [$query]");
+    }
+    my $lpath  = $PAUSE::Config->{MLROOT} . $hash->{uriid};
+
+    #
+    # For already verified files. Maybe they are to be
+    # mirrored. Attn: many "next"s leaving the loop
+    #
+
+    if ($hash->{dverified}){
+      next URIRECORD unless $hash->{mirrorit};
+      next URIRECORD unless $now > $hash->{dverified} + $hash->{mirrorit}*86400;
+
+      if (-e $lpath) {
+
+	my $request = HTTP::Request->new('HEAD', $hash->{uri});
+	my($mtime) = HTTP::Date::time2str((stat($lpath))[9]);
+	$self->logge("Info: Is $hash->{uri} newer than $mtime?");
+	$request->header('If-Modified-Since' => $mtime);
+
+	my($response,$success);
+
+	$response = $UA->request($request);
+	$success = $response->is_success;
+	# $self->logge("Debug: UA [$UA] response [$response] success [$success]");
+
+	if ( $success ){
+	  $self->logge("Info: Yes");
+	} else {
+	  # They didn't send success, so they have nothing new
+	  $self->logge("Info: No");
+	  $hash->{dverified} = $now;
+	  next URIRECORD;
+	}
+      }
+      $hash->{dverified} = 0;
+      $self->logge("Info: (Re)set dverified to 0 for uriid[$hash->{uriid}]");
+
+      $self->getit();
+      $hash->{dverified} = $now;
+      next URIRECORD;
+
+    }
+
+    # too soon: $self->logge("Debug: lpath [$lpath] uriid [$hash->{uriid}]");
+
+    if (! $hash->{dverified} && $lpath =~ m,/$,) { # directory
+
+      my($package) = PAUSE::dir2user($hash->{uriid});
+      my($uri) =  URI::URL->new($hash->{uri});
+      my($host) = $uri->host;
+      my($path) = $uri->path;
+      for ($package,$host,$path) {
+        s/[\0-\037]/?/g;
+      }
+      my $blurb = qq{
+It seems that user '$package' would like this entry in
+$PAUSE::Config->{MIRRORCONFIG}.
+
+package     =$package
+site        =$host
+remote_dir  =$path
+local_dir   +pub/authors/id/$package
+get_patt    =.
+max_days    =22
+recursive   =false
+skip        =not yet verified
+};
+
+
+
+      mypause_send_mail->send({
+                               To => $PAUSE::Config->{ADMIN},
+                               Subject => "Mirror request from $package"
+                              },
+                              $blurb
+                             );
+      $hash->{dverified}=1; # overloaded. This record in uris can be deleted after a while
+      $self->logge("Info: Sent mail about package $package");
+      next URIRECORD;
+    }
+
+    if (
+	$hash->{nosuccesstime}+$PAUSE::Config->{NO_SUCCESS_BREAK} > $now ||
+	$hash->{nosuccesscount} > $PAUSE::Config->{MAXRETRIES}
+       ) {
+      next URIRECORD;
+    }
+
+    # $self->logge("Debug: lpath[$lpath] uriid[$hash->{uriid}]");
+
+    if ( -d $lpath ) {
+      next URIRECORD;
+    } elsif ( -s _ ) {
+      # we have the file. If the database also thinks so, OK.
+      # otherwise this is a RE-upload of something README-ish
+      if ($hash->{dgot}) {
+	$hash->{dverified} = $now;
+	$self->logge("Info: Verified $hash->{uriid}");
+        my $run_mldistwatch_from_paused = 1; # since Checksums 0.050 atomicity good enough?
+        if ($run_mldistwatch_from_paused) {
+          $SIG{CHLD} = \&main::reaper;
+          my $pid = fork;
+          if (defined $pid) {
+            if ($pid) {
+              $self->logge("Info: Started mldistwatch for lpath[$lpath] with pid[$pid]");
+            } else {
+              # child
+              exec '/home/k/PAUSE/cron/mldistwatch',
+                  '--pick',
+                      $lpath,
+                          '--logfile',
+                              '/var/log/mldistwatch.log';
+            }
+          } else {
+            $self->logge("Alert: could not fork for mldistwatch: $!");
+          }
+        }
+	next URIRECORD;
+      } else {
+	unlink $lpath;
+      }
+    }
+    if ($hash->{dgot}) {
+      $self->logge("Warning: why is it not on disk? dgot[$hash->{dgot}] uriid[$hash->{uriid}] lpath[$lpath]");
+    }
+
+    $self->logge("Info: Need to get uriid[$hash->{uriid}]");
+    my $size;
+    if ($size = $self->getit()) {
+      $self->welcome_file($size);
+    } else {
+      $self->woe;
+    }
+
+  } continue {
+    $self->writeback($hash,$hash_orig,$dbh) if $hash;
+    last URIRECORD if $mypause_daemon_inspector::Terminated;
+    main::restart() if $mypause_daemon_inspector::Signal;
+  }
+
+  # disconnect, we want to sleep
+  $sth->finish;
+  $sth2->finish;
+  $dbh->disconnect;
+  # $self->logge("Info: leaving loop");
+}
+
+# package mypause_daemon_inspector
+sub woe {
+  my($self) = @_;
+
+  my $hash = $self->{URIRECORD};
+
+  my $now = $self->{NOW};
+  $hash->{nosuccesstime} = $now;
+  $hash->{nosuccesscount}++;
+  my $retries = 8;
+  my $sth2 = $self->{STH2};
+  my $dbh  = $self->{DBH};
+  if ($hash->{nosuccesscount} == $retries) {
+    my $userid = PAUSE::dir2user($hash->{uriid});
+    $sth2->execute($userid);
+    my($fullname, $asciiname) = $sth2->fetchrow_array;
+    # fullname just to reuse sth2
+    $asciiname ||= $fullname;
+    $asciiname =~ s/[^\0-\177]/?/g;
+    my @To;
+    my $pma = PAUSE::MailAddress->new_from_userid($userid,{dbh => $dbh});
+    my $to  = $pma->address;
+    push @To, $PAUSE::Config->{ADMIN}, qq{"$asciiname" <$to>};
+
+    my $blurb = "The URL $hash->{uri},
+requested for upload as $hash->{uriid} has problems
+I have retried to fetch it $retries times to no avail.
+I'll continue to try until the maximum of $PAUSE::Config->{MAXRETRIES}
+retries is reached. Then I'll give up to give room for a
+new trial.
+
+Virtually Yours,
+$Id\n";
+
+    for my $to (@To) {
+      mypause_send_mail->send({
+                               To => join(",",$to),
+                               Subject => "Upload problem $hash->{uriid}"
+                              },
+                              $blurb
+                             );
+    }
+
+  } elsif ($hash->{nosuccesscount} == $PAUSE::Config->{MAXRETRIES}) {
+
+    my $clean_txt = "";
+    my $extinguished = "";
+    # Gotta cleanup first
+    my $quote = $dbh->quote($hash->{uriid});
+    my $query = "DELETE FROM uris WHERE uriid=$quote";
+    my $ret = $dbh->do($query);
+    if ($ret) {
+      $clean_txt .= "I have extinguished $hash->{uriid} from the database,
+so we can pretend it has never existed.\n\n";
+      $extinguished=1;
+    } else {
+      $clean_txt .= "I have tried to extinguish
+  $hash->{uriid}
+from the database, but couldn't (Query[$query]erro[$DBI::errstr]).
+Seems as if the admin has to intervene\n\n";
+    }
+
+    # make sure it ends with a slash
+    # $PAUSE::Config->{INCOMING_LOC} =~ s|(?<!/)$|/|; # overly clever!
+    $PAUSE::Config->{INCOMING_LOC} =~ s|/*$|/|;
+    my $incoming_file = $PAUSE::Config->{INCOMING_LOC} . $hash->{uri};
+    if (-f $incoming_file) {
+      my $i = 1;
+      while (-f "$incoming_file~$i~") {
+        $i++;
+      }
+      if (rename $incoming_file, "$incoming_file~$i~") {
+        $clean_txt .= "I have renamed the local file
+  $incoming_file
+to
+  $incoming_file~$i~\n\n";
+      } else {
+        $clean_txt .= "I have tried to rename the file
+  $incoming_file
+to
+  $incoming_file~$i~
+but I couldn't ($!). Seems as if the admin has to do something\n\n";
+      }
+    }
+
+    my $userid = PAUSE::dir2user($hash->{uriid});
+    $sth2->execute($userid);
+    my($fullname, $asciiname) = $sth2->fetchrow_array;
+    $asciiname ||= $fullname;
+    $asciiname =~ s/[^\0-\177]/?/g;
+    my @To;
+    my $pma = PAUSE::MailAddress->new_from_userid($userid,{dbh => $dbh});
+    my $address  = $pma->address;
+    push @To, $PAUSE::Config->{ADMIN}, qq{"$asciiname" <$address>};
+
+    my $blurb;
+    if ($self->{ErrNotGzip}) {
+      $blurb = "The zcat program on PAUSE identifies the resource
+  $hash->{uri}
+as being 'not in gzip format'.
+
+$clean_txt
+Virtually Yours,
+$Id\n";
+    } else {
+      $blurb = "PAUSE has not succeeded to get the URL
+  $hash->{uri},
+requested for upload as
+  $hash->{uriid}
+after the maximum of $PAUSE::Config->{MAXRETRIES} retries.
+I give up now.
+
+$clean_txt
+Virtually Yours,
+$Id\n";
+    }
+
+    for my $to (@To) {
+      mypause_send_mail->send({
+                               To => join(",",$to),
+                               Subject => "Upload problem $hash->{uriid}"
+                              },
+                              $blurb
+                             );
+    }
+
+    # don't writeback, it would defeat removing it.
+    undef $hash if $extinguished;
+  }
+}
+
+# package mypause_daemon_inspector
+sub welcome_file {
+  my($self,$size) = @_;
+
+  my $hash = $self->{URIRECORD};
+
+  $hash->{dgot} = $self->{NOW};
+  $self->logge("Info: Got $hash->{uriid} (size $size)");
+  my $md5 = MD5->new;
+  my $handle = IO::File->new;
+  unless ( $handle->open("<$PAUSE::Config->{MLROOT}$hash->{uriid}\0") ){
+    die "open $PAUSE::Config->{MLROOT}$hash->{uriid}: $!";
+  }
+  $md5->addfile($handle);
+  $handle->close;
+  my $hexdigest = $md5->hexdigest;
+  my($userid) = PAUSE::dir2user($hash->{uriid});
+  my $sth2 = $self->{STH2};
+  $sth2->execute($userid) or warn;
+  my($fullname, $asciiname) = $sth2->fetchrow_array;
+  $asciiname ||= $fullname;
+  $asciiname =~ s/[^\0-\177]/?/g;
+  my $dbh = $self->{DBH};
+  my $pma = PAUSE::MailAddress->new_from_userid($userid,{dbh => $dbh});
+  my $address  = $pma->address;
+  my @To = qq{"$asciiname" <$address>};
+  push @To, $PAUSE::Config->{TO_CPAN_TESTERS};
+  push @To, $PAUSE::Config->{'P5P'} if
+      $hash->{'mailto_p5p'}==1;
+
+  my $blurb = "The URL";
+  $blurb = "The uploaded file" if $hash->{uri} !~ m,/,;
+  $blurb .= qq{
+
+    $hash->{uri}
+
+has entered CPAN as
+
+  file: \$CPAN/authors/id/$hash->{uriid}
+  size: $size bytes
+   md5: $hexdigest
+
+No action is required on your part
+};
+
+  $userid = PAUSE::dir2user($hash->{uriid});
+  $sth2->execute($hash->{changedby});
+  ($fullname, $asciiname) = $sth2->fetchrow_array;
+  $asciiname ||= $fullname;
+  $asciiname =~ s/[^\0-\177]/?/g;
+  $blurb .= join("",
+                 "Request entered by: $hash->{changedby} ($fullname)\n",
+                 "Request entered on: ",
+                 HTTP::Date::time2str($hash->{changed}),
+                 "\n",
+                 "Request completed:  ",
+                 HTTP::Date::time2str(time),
+                 "\n\n",
+                 "Thanks,\n-- \n$Id"
+                );
+
+  for my $to (@To) {
+    mypause_send_mail->send({
+                             To => join(",",$to),
+                             Subject => "CPAN Upload: $hash->{uriid}",
+                             "Reply-To" => $PAUSE::Config->{REPLY_TO_CPAN_TESTERS},
+                            },
+                            $blurb
+                           );
+  }
+  $self->logge("Info: Sent 'has entered' email about uriid[$hash->{uriid}]");
+  sleep 10;
+}
+
+# package mypause_daemon_inspector
+sub is_valid {
+  my($self,$uriid) = shift;
+  my($dir,$basename) = $uriid =~ m| \A (.*) / ([^/]+) \z |x;
+  if ($basename =~ m![^A-Za-z0-9_\-\.\@\+]!) {
+    $self->logge("Debug: basename[$basename] of uriid[$uriid] seems to contain illegal characters");
+    return;
+  }
+  if ($dir =~ m![^A-Za-z0-9_\-\@\+/]!) { # we allow user subdirectories, see edit.pm
+    $self->logge("Debug: dir[$dir] of uriid[$uriid] seems to contain illegal characters");
+    return;
+  }
+  our $REJECT_FILES_MATCH = qr/^perl-[\d._-]*\.(tar[._-](gz|bz2)|tbz|tgz|zip)$/;
+  # /^perl-[0-9._-]+.t(ar[._-])?(gz|bz2?)$/
+  if ($basename =~ /$REJECT_FILES_MATCH/) {
+    my($u) = PAUSE::dir2user($uriid); # =~ /([A-Z][^\/]+)/; # XXX dist2user
+    my $adbh = DBI->connect(
+                            $PAUSE::Config->{AUTHEN_DATA_SOURCE_NAME},
+                            $PAUSE::Config->{AUTHEN_DATA_SOURCE_USER},
+                            $PAUSE::Config->{AUTHEN_DATA_SOURCE_PW},
+                           ) or die $DBI::errstr;
+    my $query = "SELECT * FROM grouptable
+                   WHERE user= ?
+                     AND ugroup='pumpking'";
+    my $sth = $adbh->prepare($query);
+    $sth->execute($u);
+    my $allowed;
+    if ($sth->rows > 0){
+      $allowed = 1;
+    }
+    $sth->finish;
+    $adbh->disconnect;
+    return unless $allowed;
+  }
+  return 1;
+}
+
+# package mypause_daemon_inspector
+sub getit {
+  my($self) = @_;
+
+  my $nosuccesscount = $self->{URIRECORD}{nosuccesscount};
+  my $uri            = $self->{URIRECORD}{uri};
+  my $uriid          = $self->{URIRECORD}{uriid};
+
+  return unless $self->is_valid($uriid);
+
+  my $lpath  = $PAUSE::Config->{MLROOT} . $uriid;
+  my $tpath  = $PAUSE::Config->{TMP} . $uriid;
+  die "Panic" if $tpath =~ s/[\\\'\"\;\s]//g;
+  if ($uri =~ /\.Z$/) {
+    $tpath =~ s/\.gz$/.Z/;
+  }
+  {
+    my $tmp;
+    ($tmp) = $tpath =~ m,(.*)/,;
+    File::Path::mkpath($tmp);
+    ($tmp) = $lpath =~ m,(.*)/,;
+    File::Path::mkpath($tmp);
+  }
+  $self->logge("Info: Going to fetch uriid[$uriid]");
+  my $uri_obj;
+  eval {
+    $uri_obj =  URI::URL->new($uri, $PAUSE::Config->{INCOMING})
+  };
+
+  if ($@ || ! $uri_obj) {
+    $self->logge("Alert: Bad URL: $uri");
+    return;
+  }
+
+  if ($uri_obj->scheme !~ /^(http|ftp|https)?$/ ) { # Cave canem, e.g. file:
+    $self->logge(sprintf "Alert: Bad Scheme[%s]uri[%s]", $uri_obj->scheme, $uri);
+    return;
+  }
+
+  if ($uri_obj->scheme eq 'ftp') {
+    $uri_obj->user('ftp');
+    $uri_obj->password($PAUSE::Config->{ANON_FTP_PASS});
+  }
+
+  my $uri_abs = $uri_obj->abs;
+  $self->logge(sprintf "Info: Requesting a GET on uri [%s]", $uri_abs);
+  my $request = HTTP::Request->new('GET', $uri_abs);
+  if ($uri_obj->scheme eq "http") {
+    $request->header("Accept","*"); # Microsoft Personal Web Server
+                                    # needs this, says Dan Sugalski in
+                                    # 1997
+  }
+
+  our $UA;
+  my $response = $UA->request($request,$tpath);
+
+  our $zcat;
+  our $gzip;
+  if ($response->code == &HTTP::Status::RC_NOT_MODIFIED) {
+    $self->logge("Alert: no mirror: RC_NOT_MODIFIED for $tpath");
+    return;
+  } elsif ($response->is_success) {
+    if ($tpath =~ /\.(Z|t?gz)$/){
+      my($stat) = 0;
+      sleep 1;
+      my $ls = `ls -l $tpath`;
+      my $ret = `$zcat -t $tpath 2>&1`;
+      $stat = $?;
+      if ($stat > 0) { # it happened once that perl set $stat to <0
+	if ($ret =~ /decompression OK, trailing garbage ignored/) {
+	  rename $tpath, "$tpath.crcgarbage" or $self->logge("Could not rename '$tpath': $!");
+	  my $system = "$zcat $tpath.crcgarbage 2>/dev/null | $gzip -9c > $tpath";
+	  system($system); # ignore return value
+	  $ret = `$zcat -t $tpath 2>&1`;
+	  $stat = $?;
+	}
+      } elsif ($stat < 0) {
+        $self->logge("Alert: failed to execute: $!");
+      }
+      if ($stat > 0) {
+        $ret =~ s/\n//g;
+	$self->logge("Debug: stat[$stat]ret[$ret]");
+	my @To = $PAUSE::Config->{ADMIN};
+
+	my $blurb = "For the resource [$uri]
+the command [$zcat -t $tpath]
+returned status [$stat]
+and output [$ret].
+nosuccesscount is now at [$nosuccesscount].
+The command [ls -l $tpath]
+gives [$ls]\n\n";
+
+        for my $to (@To) {
+          mypause_send_mail->send({
+                                    To      => $to,
+                                    Subject => "Upload problem $uri"
+                                   },
+                                   $blurb
+                                  );
+        }
+        if ($ret =~ /not in gzip format/) {
+          $self->{URIRECORD}{nosuccesscount} = $PAUSE::Config->{MAXRETRIES} - 1;
+          $self->{ErrNotGzip}++;
+        }
+	return;
+      }
+    }
+    if (
+	$tpath =~ m/\.Z$/
+       ) {
+      if (-e $lpath) {
+	$self->logge("Alert: Seem to have both a .Z and a .gz");
+      } else {
+	my $system = "$gzip -dc $tpath | $gzip -9c > $lpath";
+	my $ret = system($system);
+	$self->logge("Info: Ran $system with return [$ret]");
+      }
+    } else {
+      unless (rename($tpath,$lpath)) {
+        $self->logge("Alert: could not rename '$tpath' to '$lpath'");
+        return;
+      }
+    }
+    PAUSE::newfile_hook($lpath);
+    return -s $lpath;
+  } else {
+    my $logresponse = $response->message;
+    $self->logge(sprintf(
+                         "Alert: nosuccesscount[%d] error[%s]",
+                         $self->{URIRECORD}{nosuccesscount},
+                         $logresponse,
+                        ));
+    return;
+  }
+}
+
+# often called as a class method!
+# package mypause_daemon_inspector
+sub logge {
+  my($self,$arg) = @_;
+  my $v = max $VERSION, $PAUSE::VERSION;
+  my $stamp = $self->timestamp() . " \$\$$$ v$v: ";
+  my @caller = caller;
+  shift @caller;
+  $caller[0] =~ s|.*/||;
+  my $from = join ":", @caller;
+  # open the log file
+  my $logfile = $PAUSE::Config->{PAUSE_LOG};
+  open my $LOG, ">>", $logfile or die "open $logfile: $!";
+  print $LOG $stamp, $arg, " ($from)\n";
+  close $LOG;
+}
+
+# package mypause_daemon_inspector
+sub timestamp { # Efficiently generate a time stamp for log files
+  my $self = shift; # not needed, just to remind us that we're called as a method
+  my $time = time;	# optimise for many calls in same second
+  our($last_str,$last_time);
+  return $last_str if $last_time and $time == $last_time;
+  my($sec,$min,$hour,$mday,$mon,$year)
+      = localtime($last_time = $time);
+  $last_str = sprintf("%04d-%02d-%02d %02u:%02u:%02u",
+		      $year+1900,$mon+1,$mday, $hour,$min,$sec);
+}
+
+# package mypause_daemon_inspector
+sub writeback {
+  my($self,$hash,$hash_orig,$dbh) = @_;
+  my(@v,$v);
+  for (qw[dgot dverified ddeleted uriid
+	  nosuccesstime nosuccesscount]) {
+    push @v, "$_='$hash->{$_}'" if $hash->{$_} ne $hash_orig->{$_};
+  }
+  return 0 unless @v;
+  my $query = "UPDATE uris SET ";
+  $query .= join ", ", @v;
+  ($v = $hash_orig->{uriid}) =~ s/'/\\'/g;
+  my $whereclause .= " WHERE uriid='$v'";
+  $query .= $whereclause;
+  # $self->logge("Info: Going to $query");
+  $dbh->do($query) or $self->logge("Alert: $DBI::errstr: $query");
+  if ($DBI::errstr =~ /Non unique key|Duplicate/i) {
+    my $dquery = "DELETE FROM uris $whereclause";
+    $self->logge("Debug: Non-uniq-Error; trying: $dquery");
+    $dbh->do($dquery) or $self->logge("Debug: $DBI::errstr: $dquery");
+    $self->logge("Debug: retry now: $query");
+    $dbh->do($query) or $self->logge("Alert: $DBI::errstr: $query");
+  }
+  return 1;
+}
+
+
+__END__
+
+
+=head1 NAME
+
+paused - PAUSE Daemon
+
+=head1 SYNOPSIS
+
+ paused [--pidfile pidfile]
+
+=head1 DESCRIPTION
+
+The PAUSE daemon is a daemon that inspects the PAUSE database
+continuously for new scheduled uploads. Every upload is tried to be
+satisfied and mail is sent accordingly. After each inspection cycle it
+takes a small nap.
+
+Please RTFS for details.
+
+=head3 IMPLEMENTATION NOTES
+
+2003-09-01: I just wanted to improve the getit() function to send an
+immediate email in the case that a downloaded file C<is not in gzip
+format>, but it turned out to be more involved than expected. If we
+had a more OO style we could solve that quickier. I think the next
+revisions will do some objectification. Indeed: Revs 436ff switch to
+*some* OO.
+
+2003-09-02: Revision 440 finishes the objectification. Revision 441
+tries to send that mail on C<not in gzip format>.
+
+=cut
+
