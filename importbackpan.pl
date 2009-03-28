@@ -28,6 +28,7 @@ foreach my $distfile (
     next if($chkexists->fetchrow_array());
 
     my %modules = %{$dist->modules()};
+    # FIXME inserts should be in a transaction
     $insertdist->execute($dist->dist(), $dist->distversion(), $distfile);
     printf("  %s: %s\n", $dist->dist(), $dist->distversion());
     foreach(keys %modules) {
