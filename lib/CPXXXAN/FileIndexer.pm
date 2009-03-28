@@ -161,7 +161,7 @@ sub modules {
             close($fh);
 
             # from PAUSE::pmfile::packages_per_pmfile in mldistwatch.pm
-            $PM =~ /\bpackage\s+([\w\:\']+)/;
+            $PM =~ /\bpackage\s+([\w\:\']+)\s*($|[};])/;
             if($1) {
                 my $module = $1;
                 $self->{modules}->{$module} = $version;
