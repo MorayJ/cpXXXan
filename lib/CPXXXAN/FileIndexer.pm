@@ -10,6 +10,7 @@ $VERSION = '1.0';
 use Cwd qw(getcwd abs_path);
 use File::Temp qw(tempdir);
 use File::Find::Rule;
+use File::Path;
 use Data::Dumper;
 use Archive::Tar;
 use Archive::Zip;
@@ -73,7 +74,7 @@ sub new {
 # unarchived into
 sub _unarchive {
     my $file = shift;
-    my $tempdir = tempdir(TMPDIR => 1, CLEANUP => 1);
+    my $tempdir = tempdir(TMPDIR => 1);
     chdir($tempdir);
     if($file =~ /\.zip$/) {
         my $zip = Archive::Zip->new($file);
@@ -160,6 +161,7 @@ sub modules {
                 $self->{modules}->{$module} = $version;
             }
         }
+        rmtree($tempdir);
     }
     return $self->{modules};
 }
