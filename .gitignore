@@ -2,3 +2,4 @@ Makefile
 pm_to_blib
 blib/
 db/
+cover_db/

@@ -45,15 +45,17 @@ or zip file from the BackPAN.
 sub new {
     my($class, $file) = @_;
     die("$file doesn't exist\n") if(!-e $file);
+    die("$file looks like a ppm\n")
+        if($file =~ /\.ppm\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/i);
     die("$file isn't the right type\n")
-        if($file !~ /\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/);
+        if($file !~ /\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/i);
     $file = abs_path($file);
 
     # dist name and version
-    (my $dist = $file) =~ s{(^.*/|\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$)}{}g;
+    (my $dist = $file) =~ s{(^.*/|\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$)}{}gi;
     $dist =~ /^(.*)-(\d.*)$/;
     ($dist, my $distversion) = ($1, $2);
-    die("Can't index perl itself ($dist-$distversion)\n") if($dist =~ /^(perl|ponie|kurila)$/);
+    die("Can't index perl itself ($dist-$distversion)\n") if($dist =~ /^(perl|ponie|kurila|parrot|Perl6-Pugs|v6-pugs)$/);
 
     bless {
         file    => $file,
@@ -76,19 +78,20 @@ sub _unarchive {
     my $file = shift;
     my $tempdir = tempdir(TMPDIR => 1);
     chdir($tempdir);
-    if($file =~ /\.zip$/) {
+    if($file =~ /\.zip$/i) {
         my $zip = Archive::Zip->new($file);
-        $zip->extractTree();
-    } elsif($file =~ /\.(tar(\.gz)?|tgz)$/) {
+        $zip->extractTree() if($zip);
+    } elsif($file =~ /\.(tar(\.gz)?|tgz)$/i) {
         my $tar = Archive::Tar->new($file, 1);
-        $tar->extract();
-    } elsif($file =~ /(\.tbz|\.tar\.bz2)$/) {
+        $tar->extract() if($tar);
+    } else {
+    # } elsif($file =~ /(\.tbz|\.tar\.bz2)$/i) {
         open(my $fh, '-|', qw(bzip2 -dc), $file) || die("Can't unbzip2\n");
         my $tar = Archive::Tar->new($fh);
-        $tar->extract();
-    } elsif($file =~ /\.tar$/) {
-        my $tar = Archive::Tar->new($file);
-        $tar->extract();
+        $tar->extract() if($tar);
+    # } elsif($file =~ /\.tar$/) {
+    #     my $tar = Archive::Tar->new($file);
+    #     $tar->extract();
     }
     return $tempdir;
 }
@@ -107,8 +110,8 @@ sub _parse_version_safely {
         next unless /([\$*])(([\w\:\']*)\bVERSION)\b.*\=/;
         my $current_parsed_line = $_;
         my $eval = qq{
-            package ExtUtils::MakeMaker::_version;
-            use vars qw(\$VERSION);
+            package }.__PACKAGE__.qq{::_version;
+            no strict;
             local $1$2;
             \$$2=undef; do {
                 $_
@@ -116,12 +119,15 @@ sub _parse_version_safely {
         };
         local $^W = 0;
         $result = eval($eval);
-        die "_parse_version_safely: ".Dumper({
-              eval => $eval,
-              line => $current_parsed_line,
-              file => $parsefile,
-              err => $@,
-        }) if $@;
+        if($@ =~ /syntax error/i) { $result = undef; }
+         elsif($@) {
+            warn "_parse_version_safely: ".Dumper({
+                eval => $eval,
+                line => $current_parsed_line,
+                file => $parsefile,
+                err => $@,
+            });
+        }
         last;
     }
     close $fh;
