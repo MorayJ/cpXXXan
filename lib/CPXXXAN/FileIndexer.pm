@@ -54,32 +54,9 @@ sub new {
     ($dist, my $distversion) = ($1, $2);
     die("Can't index perl itself ($dist-$distversion)\n") if($dist =~ /^(perl|ponie|kurila)$/);
 
-    _pushd();
-    my $tempdir = _unarchive($file);
-    _popd();
-
-    # find modules
-    my @PMs = grep {
-        $_ !~ m{^\Q$tempdir\E/[^/]+/(t|inc|xt)/}
-    } File::Find::Rule->file()->name('*.pm')->in($tempdir);
-    my $modules = {};
-    foreach my $PM (@PMs) {
-        local $/ = undef;
-        my $version = _parse_version_safely($PM);
-        open(my $fh, $PM) || die("Can't read $PM\n");
-        $PM = <$fh>;
-        close($fh);
-
-        # from PAUSE::pmfile::packages_per_pmfile in mldistwatch.pm
-        $PM =~ /\bpackage\s+([\w\:\']+)/;
-        if($1) {
-            my $module = $1;
-            $modules->{$module} = $version;
-        }
-    }
-
     bless {
-        modules => $modules,
+        file    => $file,
+        modules => {},
         dist    => $dist,
         distversion => $distversion
     }, $class;
@@ -160,6 +137,30 @@ the versions of the modules.
 
 sub modules {
     my $self = shift;
+    if(!(keys %{$self->{modules}})) {
+        _pushd();
+        my $tempdir = _unarchive($self->{file});
+        _popd();
+
+        # find modules
+        my @PMs = grep {
+            $_ !~ m{^\Q$tempdir\E/[^/]+/(t|inc|xt)/}
+        } File::Find::Rule->file()->name('*.pm')->in($tempdir);
+        foreach my $PM (@PMs) {
+            local $/ = undef;
+            my $version = _parse_version_safely($PM);
+            open(my $fh, $PM) || die("Can't read $PM\n");
+            $PM = <$fh>;
+            close($fh);
+
+            # from PAUSE::pmfile::packages_per_pmfile in mldistwatch.pm
+            $PM =~ /\bpackage\s+([\w\:\']+)/;
+            if($1) {
+                my $module = $1;
+                $self->{modules}->{$module} = $version;
+            }
+        }
+    }
     return $self->{modules};
 }
 
