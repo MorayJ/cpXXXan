@@ -1,6 +1,6 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
-    NAME         => 'Class::CanBeA',
+    NAME         => 'CPXXXAN',
     VERSION_FROM => 'lib/CPXXXAN/FileIndexer.pm',
     PREREQ_PM    => {
         'Archive::Tar' => 0,
