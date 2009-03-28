@@ -201,3 +201,7 @@ t/XML-Tiny-DOM-1.0.zip
 importbackpan.pl
 t/coverage.sh
 t/Foo-123.456.tar.gz
+NOTES
+t/Foo-123.456.ppm.zip
+t/parrot-0.4.13.tar.gz
+t/Perl6-Pugs-6.2.13.tar.gz
