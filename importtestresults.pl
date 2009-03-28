@@ -13,12 +13,15 @@ my $results = $testresults->selectall_arrayref(
     {Slice => {}}
 );
 
-my $sth = $cpxxxan->prepare('
+my $insert = $cpxxxan->prepare('
     INSERT INTO passes (id, dist, distversion, perl) VALUES (?, ?, ?, ?)
 ');
+my $select = $cpxxxan->prepare('SELECT id FROM passes WHERE id = ?');
 
 foreach(@{$results}) {
-    if($sth->execute($_->{id}, $_->{dist}, $_->{version}, $_->{perl})) {
+    $select->execute($_->{id});
+    if(!$select->fetchrow_array()) {
+        $insert->execute($_->{id}, $_->{dist}, $_->{version}, $_->{perl});
         printf("id: %s\tdist: %s\tversion: %s\tperl: %s\n",
             $_->{id}, $_->{dist}, $_->{version}, $_->{perl});
     }
