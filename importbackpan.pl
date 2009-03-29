@@ -35,7 +35,16 @@ foreach my $distfile (
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
 
-    my %modules = %{$dist->modules()};
+    my %modules;
+    { local $SIG{__WARN__} = sub {
+          if(join('', @_) =~ /unsafe code/i) {
+              open(ERRLOG, '>>errorlog');
+              print ERRLOG "---\n$distfile\n\n".join('', @_)."\n";
+              close(ERRLOG);
+          }
+      };
+      %modules = %{$dist->modules()};
+    }
     $insertdist->execute($dist->dist(), $dist->distversion(), $distfile);
     printf("  %s: %s\n", $dist->dist(), $dist->distversion());
     foreach(keys %modules) {

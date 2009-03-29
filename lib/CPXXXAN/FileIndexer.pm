@@ -148,6 +148,7 @@ sub _parse_version_safely {
             ));
             $c->share_from(__PACKAGE__, [qw(qv)]);
             s/\buse\s+version\b.*?;//gs;
+            s/\buse\s+vars\b//g;
             $eval = qq{
                 # package }.__PACKAGE__.qq{::_version;
                 local ${sigil}${var};
@@ -161,8 +162,8 @@ sub _parse_version_safely {
         if($@ =~ /syntax error/i) {
             warn("Syntax error in \$VERSION\n$@\n$eval");
             $result = undef;
-        } elsif($@ =~ /trapped by operation mask/i) {
-            die("Unsafe code in \$VERSION\n$@\n$eval");
+        } elsif($@ =~ /(trapped by operation mask|undefined subroutine)/i) {
+            warn("Unsafe code in \$VERSION\n$@\n$parsefile\n$eval");
             $result = undef;
         } elsif($@) {
             die "_parse_version_safely: ".Dumper({

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
@@ -42,6 +42,8 @@ ok($archive->isdevversion(), '_ in dist version implies dev release');
 print "# miscellaneous errors\n";
 $archive = CPXXXAN::FileIndexer->new('t/Bad-Permissions-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Bad::Permissions' => 123.456}, "Bad perms handled OK");
+$archive = CPXXXAN::FileIndexer->new('t/Bad-UseVars-123.456.tar.gz');
+is_deeply($archive->modules(), { 'Bad::UseVars' => 789}, "'use vars ...; \$VERSION =' handled OK");
 
 print "# various broken \$VERSIONs\n";
 { local $SIG{__WARN__} = sub {};
