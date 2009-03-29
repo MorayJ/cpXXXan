@@ -158,15 +158,13 @@ sub _parse_version_safely {
             };
             $result = $c->reval($eval);
         };
-        warn($eval) if($@);
-        if($@ =~ /(syntax error|bad name|can't find string terminator|no package name allowed for variable|^died at|version mismatch|can't locate object method|can't modify single ref constructor)/i) {
-            warn("Syntax error in \$VERSION\n$@\n$eval");
-            $result = undef;
-        } elsif($@ =~ /(trapped by operation mask|undefined subroutine)/i) {
+        # stuff that's my fault because of the Safe compartment
+        # warn($eval) if($@);
+        if($@ =~ /trapped by operation mask/i) {
             warn("Unsafe code in \$VERSION\n$@\n$parsefile\n$eval");
             $result = undef;
         } elsif($@) {
-            die "_parse_version_safely: ".Dumper({
+            warn "_parse_version_safely: ".Dumper({
                 eval => $eval,
                 line => $current_parsed_line,
                 file => $parsefile,
@@ -217,7 +215,7 @@ sub modules {
 
         # find modules
         my @PMs = grep {
-            $_ !~ m{^\Q$tempdir\E/[^/]+/(t|inc|xt)/}
+            $_ !~ m{^\Q$tempdir\E/[^/]+/(t|inc|xt)}
         } File::Find::Rule->file()->name('*.pm')->in($tempdir);
         foreach my $PM (@PMs) {
             local $/ = undef;
