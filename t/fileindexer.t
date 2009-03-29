@@ -51,7 +51,12 @@ print "# various broken \$VERSIONs\n";
   $archive = CPXXXAN::FileIndexer->new('t/Bad-Backticks-123.456.tar.gz');
   is_deeply($archive->modules(), { 'Bad::Unsafe' => undef }, 'unsafe `$VERSION` isn\'t executed');
   $archive = CPXXXAN::FileIndexer->new('t/Bad-UseVersion-123.456.tar.gz');
-  is_deeply($archive->modules(), { 'Bad::UseVersion' => '0.0.3' }, 'use version; $VERSION = qv(...) works');
+  is_deeply(
+      $archive->modules(),
+      {
+          'Bad::UseVersion'   => '0.0.3',
+          'Bad::UseVersionQv' => '0.0.3'
+      }, 'use version; $VERSION = qv(...) works');
 }
 
 print "# Check that we ignore obviously silly files\n";

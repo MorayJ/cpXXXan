@@ -147,7 +147,7 @@ sub _parse_version_safely {
                  open_dir closedir 
             ));
             $c->share_from(__PACKAGE__, [qw(qv)]);
-            s/\buse\s+version\s*;//g;
+            s/\buse\s+version\b.*?;//gs;
             $eval = qq{
                 # package }.__PACKAGE__.qq{::_version;
                 local ${sigil}${var};
