@@ -15,6 +15,8 @@ use Data::Dumper;
 use Archive::Tar;
 use Archive::Zip;
 use Safe;
+# safe to load, load now because it's commonly used for $VERSION
+use version;
 
 $Archive::Tar::DO_NOT_USE_PREFIX = 1;
 $Archive::Tar::CHMOD = 0;
@@ -113,55 +115,57 @@ sub _parse_version_safely {
         next if $inpod || /^\s*#/;
         chop;
         next unless /([\$*])(([\w\:\']*)\bVERSION)\b.*\=/;
+        my($sigil, $var) = ($1, $2);
         my $current_parsed_line = $_;
         {
             local $^W = 0;
             no strict;
             my $c = Safe->new();
-            # deny anything to do with the filesystem, other processes,
-            # networking, system databases (eg /etc/passwd), ...
             $c->deny(qw(
-                tie untie tied chdir flock ioctl socket getpeername
-                ssockopt bind connect listen accept shutdown gsockopt
-                getsockname sleep alarm entereval reset dbstate
-                readline rcatline getc read formline enterwrite
-                leavewrite print say sysread syswrite send recv eof
-                tell seek sysseek readdir telldir seekdir rewinddir
-                lock stat lstat readlink ftatime ftblk ftchr ftctime
-                ftdir fteexec fteowned fteread ftewrite ftfile ftis
-                ftlink ftmtime ftpipe ftrexec ftrowned ftrread ftsgid
-                ftsize ftsock ftsuid fttty ftzero ftrwrite ftsvtx
-                fttext ftbinary fileno ghbyname ghbyaddr ghostent
-                shostent ehostent gnbyname gnbyaddr gnetent snetent
-                enetent gpbyname gpbynumber gprotoent sprotoent
-                eprotoent gsbyname gsbyport gservent sservent
-                eservent  gpwnam gpwuid gpwent spwent epwent
-                getlogin ggrnam ggrgid ggrent sgrent egrent msgctl
-                msgget msgrcv msgsnd semctl semget semop shmctl
-                shmget shmread shmwrite require dofile caller
-                syscall dump chroot link unlink rename symlink
-                truncate backtick system fork wait waitpid glob
-                exec exit kill time tms mkdir rmdir utime chmod
-                chown fcntl sysopen open close umask binmode
-                open_dir closedir 
+                 tie untie tied chdir flock ioctl socket getpeername
+                 ssockopt bind connect listen accept shutdown gsockopt
+                 getsockname sleep alarm entereval reset dbstate
+                 readline rcatline getc read formline enterwrite
+                 leavewrite print say sysread syswrite send recv eof
+                 tell seek sysseek readdir telldir seekdir rewinddir
+                 lock stat lstat readlink ftatime ftblk ftchr ftctime
+                 ftdir fteexec fteowned fteread ftewrite ftfile ftis
+                 ftlink ftmtime ftpipe ftrexec ftrowned ftrread ftsgid
+                 ftsize ftsock ftsuid fttty ftzero ftrwrite ftsvtx
+                 fttext ftbinary fileno ghbyname ghbyaddr ghostent
+                 shostent ehostent gnbyname gnbyaddr gnetent snetent
+                 enetent gpbyname gpbynumber gprotoent sprotoent
+                 eprotoent gsbyname gsbyport gservent sservent
+                 eservent  gpwnam gpwuid gpwent spwent epwent
+                 getlogin ggrnam ggrgid ggrent sgrent egrent msgctl
+                 msgget msgrcv msgsnd semctl semget semop shmctl
+                 shmget shmread shmwrite require dofile caller
+                 syscall dump chroot link unlink rename symlink
+                 truncate backtick system fork wait waitpid glob
+                 exec exit kill time tms mkdir rmdir utime chmod
+                 chown fcntl sysopen open close umask binmode
+                 open_dir closedir 
             ));
+            $c->share_from(__PACKAGE__, [qw(qv)]);
+            s/\buse\s+version\s*;//g;
             $eval = qq{
-                package }.__PACKAGE__.qq{::_version;
-                local $1$2;
-                \$$2=undef; do {
+                # package }.__PACKAGE__.qq{::_version;
+                local ${sigil}${var};
+                \$$var = undef; do {
                     $_
-                }; \$$2
+                }; \$$var
             };
             $result = $c->reval($eval);
         };
+        warn($eval) if($@);
         if($@ =~ /syntax error/i) {
             warn("Syntax error in \$VERSION\n");
             $result = undef;
         } elsif($@ =~ /trapped by operation mask/i) {
-            warn("Unsafe code in \$VERSION\n$@\n$eval");
+            warn("Unsafe code in \$VERSION\n$@\n$!\n$eval");
             $result = undef;
         } elsif($@) {
-            warn "_parse_version_safely: ".Dumper({
+            die "_parse_version_safely: ".Dumper({
                 eval => $eval,
                 line => $current_parsed_line,
                 file => $parsefile,
@@ -172,6 +176,9 @@ sub _parse_version_safely {
     }
     close $fh;
 
+    # version.pm objects come out is Safe::...::version objects,
+    # which breaks weirdly
+    bless($result, 'version') if(ref($result) =~ /::version$/);
     return $result;
 }
 
