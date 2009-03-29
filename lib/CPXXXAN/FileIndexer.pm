@@ -138,6 +138,21 @@ sub _parse_version_safely {
     return $result;
 }
 
+=head2 isdevversion
+
+Returns true or false depending on whether this is a developer-only
+or trial release of a distribution.  This is determined by looking for
+an underscore in the distribution version, or the text 'TRIAL' in the
+filename.
+
+=cut
+
+sub isdevversion {
+    my $self = shift;
+    return 1 if($self->distversion() =~ /_/ || $self->{file} =~ /TRIAL/);
+    return 0;
+}
+
 =head2 modules
 
 Returns a hashref whose keys are module names, and their values are
@@ -148,6 +163,7 @@ the versions of the modules.
 sub modules {
     my $self = shift;
     if(!(keys %{$self->{modules}})) {
+        $self->{_modules_runs}++;
         _pushd();
         my $tempdir = _unarchive($self->{file});
         _popd();

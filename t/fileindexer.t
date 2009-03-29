@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 21;
+use Test::More tests => 25;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
@@ -20,6 +20,7 @@ foreach my $archive (File::Find::Rule->file()->name('XML-Tiny-DOM-1.0*')->in('t'
 my $archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-1.2.tar.gz');
 ok($archive->dist() eq 'Class-CanBeA', 'dist() works (got '.$archive->dist().')');
 ok($archive->distversion() eq '1.2', 'distversion() works (got '.$archive->distversion().')');
+ok(!$archive->isdevversion(), 'isdevversion() works for a normal release');
 is_deeply($archive->{modules}, {}, '$dist->{modules} isn\'t populated until needed');
 is_deeply(
     $archive->modules(),
@@ -29,8 +30,14 @@ is_deeply(
 is_deeply(
     $archive->modules(),
     { 'Class::CanBeA' => 1.2 },
-    "calling ...->modules() twice works (well duh but more coverage points!"
+    "calling ...->modules() twice works"
 );
+ok($archive->{_modules_runs} == 1, "... but the time-consuming bit is only run once");
+
+$archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-1.2_1.tar.gz');
+ok($archive->isdevversion(), '_ in dist version implies dev release');
+$archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-TRIAL-1.2.tar.gz');
+ok($archive->isdevversion(), 'TRIAL in dist implies dev release');
 
 $archive = CPXXXAN::FileIndexer->new('t/Foo-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Foo' => undef }, "Broken version == undef");
