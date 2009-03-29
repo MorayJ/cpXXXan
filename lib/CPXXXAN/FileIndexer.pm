@@ -15,6 +15,9 @@ use Data::Dumper;
 use Archive::Tar;
 use Archive::Zip;
 
+$Archive::Tar::DO_NOT_USE_PREFIX = 1;
+$Archive::Tar::CHMOD = 0;
+
 =head1 NAME
 
 CPXXXAN::FileIndexer - index a file from the BackPAN

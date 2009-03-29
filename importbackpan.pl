@@ -9,7 +9,7 @@ use DBI;
 
 use constant BACKPAN => '/Users/david/BackPAN';
 
-my $dbh = DBI->connect('dbi:SQLite:dbname=db/cpXXXan');
+my $dbh = DBI->connect('dbi:SQLite:dbname=db/cpXXXan', '', '', { AutoCommit => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
 my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, dist, distversion) VALUES (?, ?, ?, ?)');
@@ -28,7 +28,6 @@ foreach my $distfile (
     next if($chkexists->fetchrow_array());
 
     my %modules = %{$dist->modules()};
-    # FIXME inserts should be in a transaction
     $insertdist->execute($dist->dist(), $dist->distversion(), $distfile);
     printf("  %s: %s\n", $dist->dist(), $dist->distversion());
     foreach(keys %modules) {
@@ -36,4 +35,5 @@ foreach my $distfile (
         $insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion());
         printf("    %s: %s\n", $_, $modules{$_});
     }
+    $dbh->commit();
 }

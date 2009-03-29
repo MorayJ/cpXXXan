@@ -1,1 +1,4 @@
 No way of knowing who was authorised to upload $module at $time
+
+When eval()ing $VERSION, can we turn taint-mode on for that block,
+  and make it impossible to turn off in that block?

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 20;
+use Test::More tests => 21;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
@@ -34,6 +34,9 @@ is_deeply(
 
 $archive = CPXXXAN::FileIndexer->new('t/Foo-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Foo' => undef }, "Broken version == undef");
+
+$archive = CPXXXAN::FileIndexer->new('t/Bad-Permissions-123.456.tar.gz');
+is_deeply($archive->modules(), { 'Bad::Permissions' => 123.456}, "Bad perms handled OK");
 
 eval { CPXXXAN::FileIndexer->new('t/Foo-123.456.ppm.zip') };
 ok($@ =~ /looks like a ppm/i, "Correctly fail on a PPM");
