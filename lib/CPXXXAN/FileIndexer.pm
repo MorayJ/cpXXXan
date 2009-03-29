@@ -162,7 +162,7 @@ sub _parse_version_safely {
             warn("Syntax error in \$VERSION\n$@\n$eval");
             $result = undef;
         } elsif($@ =~ /trapped by operation mask/i) {
-            warn("Unsafe code in \$VERSION\n$@\n$eval");
+            die("Unsafe code in \$VERSION\n$@\n$eval");
             $result = undef;
         } elsif($@) {
             die "_parse_version_safely: ".Dumper({
@@ -199,7 +199,10 @@ sub isdevversion {
 =head2 modules
 
 Returns a hashref whose keys are module names, and their values are
-the versions of the modules.
+the versions of the modules.  The version number is retrieved by
+eval()ing what looks like a $VERSION line in the code.  This is done
+in a C<Safe> compartment, but may be a security risk if you do this
+with untrusted code.
 
 =cut
 
@@ -257,6 +260,13 @@ sub distversion{
     my $self = shift;
     return $self->{distversion};
 }
+
+=head1 SECURITY
+
+This module executes a very small amount of code from each module that
+it finds in a distribution.  While every effort has been made to do
+this safely, there are no guarantees that it won't let the distributions
+you're examining do horrible things to your code.
 
 =head1 LIMITATIONS, BUGS and FEEDBACK
 
