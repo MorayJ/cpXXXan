@@ -159,10 +159,10 @@ sub _parse_version_safely {
         };
         warn($eval) if($@);
         if($@ =~ /syntax error/i) {
-            warn("Syntax error in \$VERSION\n");
+            warn("Syntax error in \$VERSION\n$@\n$eval");
             $result = undef;
         } elsif($@ =~ /trapped by operation mask/i) {
-            warn("Unsafe code in \$VERSION\n$@\n$!\n$eval");
+            warn("Unsafe code in \$VERSION\n$@\n$eval");
             $result = undef;
         } elsif($@) {
             die "_parse_version_safely: ".Dumper({
