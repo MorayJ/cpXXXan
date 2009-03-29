@@ -159,7 +159,7 @@ sub _parse_version_safely {
             $result = $c->reval($eval);
         };
         warn($eval) if($@);
-        if($@ =~ /syntax error/i) {
+        if($@ =~ /(syntax error|bad name|can't find string terminator|no package name allowed for variable|^died at|version mismatch|can't locate object method|can't modify single ref constructor)/i) {
             warn("Syntax error in \$VERSION\n$@\n$eval");
             $result = undef;
         } elsif($@ =~ /(trapped by operation mask|undefined subroutine)/i) {
