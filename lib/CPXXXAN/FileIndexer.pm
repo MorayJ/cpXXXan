@@ -210,11 +210,15 @@ test suite.
 
 =cut
 
-# =head1 SEE ALSO
+=head1 SEE ALSO
+
+L<http://pause.perl.org/>
 
 =head1 AUTHOR, COPYRIGHT and LICENCE
 
 Copyright 2009 David Cantrell E<lt>david@cantrell.org.ukE<gt>
+
+Contains code originally from the PAUSE by Andreas Koenig.
 
 This software is free-as-in-speech software, and may be used,
 distributed, and modified under the terms of either the GNU
