@@ -1,10 +1,12 @@
 CREATE TABLE modules (
-    module      VARCHAR(256),
-    modversion  VARCHAR(24),
-    dist        VARCHAR(256),
-    distversion VARCHAR(24)
+    module          VARCHAR(256),
+    modversion      VARCHAR(24),
+    normmodversion  VARCHAR(24),
+    dist            VARCHAR(256),
+    distversion     VARCHAR(24)
 );
 CREATE UNIQUE INDEX modules_idx ON modules(module, modversion, dist, distversion);
+CREATE        INDEX normver_idx ON modules(module, normmodversion);
 CREATE TABLE dists (
     dist        VARCHAR(256),
     distversion VARCHAR(24),

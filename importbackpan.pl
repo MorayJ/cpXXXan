@@ -13,7 +13,7 @@ use constant BACKPAN => '/Users/david/BackPAN';
 my $dbh = DBI->connect('dbi:SQLite:dbname=db/cpXXXan', '', '', { AutoCommit => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
-my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, dist, distversion) VALUES (?, ?, ?, ?)');
+my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, normmodversion, dist, distversion) VALUES (?, ?, ?, ?, ?)');
 
 foreach my $distfile (
   File::Find::Rule
@@ -21,12 +21,16 @@ foreach my $distfile (
     ->name(qr/\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/)
     ->in(BACKPAN.'/authors/id')
 ) {
-    print "$distfile\n";
     my $dist = eval { CPXXXAN::FileIndexer->new($distfile); };
     next if($@);
+    $distfile =~ s!(??{BACKPAN})/authors/id/!!;
+    print "$distfile\n";
 
     # don't index dev versions
-    next if($dist->distversion() =~ /_/);
+    if($dist->isdevversion()) {
+        print "  SKIP - dev release\n";
+        next;
+    }
 
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
@@ -37,11 +41,10 @@ foreach my $distfile (
     foreach(keys %modules) {
         $modules{$_} ||= 0;
         # catch broken versions eg Text-PDF-API: 0.01_12_snapshot
-        eval { $modules{$_} = version->new($modules{$_})->numify(); };
-        $modules{$_} = 0 if($@);
+        my $normmodversion = eval { version->new($modules{$_})->numify(); } || 0;
 
-        $insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion());
-        printf("    %s: %s\n", $_, $modules{$_});
+        $insertmod->execute($_, $modules{$_}, $normmodversion, $dist->dist(), $dist->distversion());
+        printf("    %s: %s (%s)\n", $_, $modules{$_}, $normmodversion);
     }
     $dbh->commit();
 }
