@@ -142,14 +142,13 @@ sub _parse_version_safely {
 
 Returns true or false depending on whether this is a developer-only
 or trial release of a distribution.  This is determined by looking for
-an underscore in the distribution version, or the text 'TRIAL' in the
-filename.
+an underscore in the distribution version.
 
 =cut
 
 sub isdevversion {
     my $self = shift;
-    return 1 if($self->distversion() =~ /_/ || $self->{file} =~ /TRIAL/);
+    return 1 if($self->distversion() =~ /_/);
     return 0;
 }
 

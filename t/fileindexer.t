@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 25;
+use Test::More tests => 24;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
@@ -36,8 +36,6 @@ ok($archive->{_modules_runs} == 1, "... but the time-consuming bit is only run o
 
 $archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-1.2_1.tar.gz');
 ok($archive->isdevversion(), '_ in dist version implies dev release');
-$archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-TRIAL-1.2.tar.gz');
-ok($archive->isdevversion(), 'TRIAL in dist implies dev release');
 
 $archive = CPXXXAN::FileIndexer->new('t/Foo-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Foo' => undef }, "Broken version == undef");
