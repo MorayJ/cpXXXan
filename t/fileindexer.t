@@ -1,11 +1,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 24;
+use Test::More tests => 25;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
 
+print "# can we read all the different types of file?\n";
 foreach my $archive (File::Find::Rule->file()->name('XML-Tiny-DOM-1.0*')->in('t')) {
     is_deeply(
         CPXXXAN::FileIndexer->new($archive)->modules(),
@@ -17,6 +18,7 @@ foreach my $archive (File::Find::Rule->file()->name('XML-Tiny-DOM-1.0*')->in('t'
     )
 }
 
+print "# make sure all the methods work on a good distro\n";
 my $archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-1.2.tar.gz');
 ok($archive->dist() eq 'Class-CanBeA', 'dist() works (got '.$archive->dist().')');
 ok($archive->distversion() eq '1.2', 'distversion() works (got '.$archive->distversion().')');
@@ -37,12 +39,20 @@ ok($archive->{_modules_runs} == 1, "... but the time-consuming bit is only run o
 $archive = CPXXXAN::FileIndexer->new('t/Class-CanBeA-1.2_1.tar.gz');
 ok($archive->isdevversion(), '_ in dist version implies dev release');
 
-$archive = CPXXXAN::FileIndexer->new('t/Foo-123.456.tar.gz');
-is_deeply($archive->modules(), { 'Foo' => undef }, "Broken version == undef");
-
+print "# miscellaneous errors\n";
 $archive = CPXXXAN::FileIndexer->new('t/Bad-Permissions-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Bad::Permissions' => 123.456}, "Bad perms handled OK");
 
+print "# various broken \$VERSIONs\n";
+{ local $SIG{__WARN__} = sub {};
+  $archive = CPXXXAN::FileIndexer->new('t/Foo-123.456.tar.gz');
+  is_deeply($archive->modules(), { 'Foo' => undef }, "Broken version == undef");
+
+  $archive = CPXXXAN::FileIndexer->new('t/Bad-Unsafe-123.456.tar.gz');
+  is_deeply($archive->modules(), { 'Bad::Unsafe' => undef }, 'unsafe $VERSION isn\'t executed');
+}
+
+print "# Check that we ignore obviously silly files\n";
 eval { CPXXXAN::FileIndexer->new('t/Foo-123.456.ppm.zip') };
 ok($@ =~ /looks like a ppm/i, "Correctly fail on a PPM");
 eval { CPXXXAN::FileIndexer->new('t/non-existent-file') };
