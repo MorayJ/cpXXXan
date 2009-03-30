@@ -16,25 +16,29 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan');
 my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
-my $results = $testresults->selectall_arrayref(
-    q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass' AND (dist LIKE 'DBI%' or dist LIKE 'DBD%')},
-    {Slice => {}}
-);
+# my $results = $testresults->selectall_arrayref(
+#     q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass'},
+#     # q{ AND (dist LIKE 'DBI%' or dist LIKE 'DBD%')},
+#     {Slice => {}}
+# );
+my $sth = $testresults->prepare(q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass'});
+$sth->execute();
 
 my $insert = $cpxxxan->prepare('
     INSERT INTO passes (id, dist, distversion, normdistversion, perl) VALUES (?, ?, ?, ?, ?)
 ');
 my $select = $cpxxxan->prepare('SELECT id FROM passes WHERE id = ?');
 
-foreach(@{$results}) {
-    $select->execute($_->{id});
+# foreach my $testresult (@{$results}) {
+while(my $testresult = $sth->fetchrow_hashref()) {
+    $select->execute($testresult->{id});
     if(!$select->fetchrow_array()) {
         $insert->execute(
-            $_->{id}, $_->{dist}, $_->{version},
-            eval { version->new($_->{version})->numify() } || 0,
-            $_->{perl}
+            $testresult->{id}, $testresult->{dist}, $testresult->{version},
+            eval { version->new($testresult->{version})->numify() } || 0,
+            $testresult->{perl}
         );
         printf("id: %s\tdist: %s\tversion: %s\tperl: %s\n",
-            $_->{id}, $_->{dist}, $_->{version}, $_->{perl});
+            $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl});
     }
 }
