@@ -225,8 +225,7 @@ sub modules {
             close($fh);
 
             # from PAUSE::pmfile::packages_per_pmfile in mldistwatch.pm
-            $PM =~ /\bpackage\s+([\w\:\']+)\s*($|[};])/;
-            if($1) {
+            if($PM =~ /\bpackage[ \t]+([\w\:\']+)\s*($|[};])/) {
                 my $module = $1;
                 $self->{modules}->{$module} = $version;
             }

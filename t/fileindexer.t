@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
@@ -44,6 +44,10 @@ $archive = CPXXXAN::FileIndexer->new('t/Bad-Permissions-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Bad::Permissions' => 123.456}, "Bad perms handled OK");
 $archive = CPXXXAN::FileIndexer->new('t/Bad-UseVars-123.456.tar.gz');
 is_deeply($archive->modules(), { 'Bad::UseVars' => 789}, "'use vars ...; \$VERSION =' handled OK");
+
+print "# check that package\\nFoo is not indexed\n";
+$archive = CPXXXAN::FileIndexer->new('t/Bad-SplitPackage-234.567.tar.gz');
+is_deeply($archive->modules(), { 'NotSplit' => 234.567 }, 'package\nFoo; is not indexed');
 
 print "# various broken \$VERSIONs\n";
 { local $SIG{__WARN__} = sub {};
