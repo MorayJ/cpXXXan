@@ -24,7 +24,7 @@ my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, normmod
 foreach my $distfile (
   File::Find::Rule
     ->file()
-    ->name(qr/^DB[ID].*\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/)
+    ->name(qr/\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/)
     ->in(BACKPAN.'/authors/id')
 ) {
     my $dist = eval { CPXXXAN::FileIndexer->new($distfile); };
