@@ -71,10 +71,10 @@ print "# various broken \$VERSIONs\n";
           'Bad::UseVersionQv' => '0.0.3'
       }, 'use version; $VERSION = qv(...) works'
   );
+  $archive = CPXXXAN::FileIndexer->new('t/Acme-BadExample-1.01.tar.gz');
+  is_deeply( $archive->modules(), { 'Acme::BadExample' => undef },
+      "Acme-BadExample-1.01 doesn't crash :-)");
 }
-$archive = CPXXXAN::FileIndexer->new('t/Acme-BadExample-1.01.tar.gz');
-is_deeply( $archive->modules(), { 'Acme::BadExample' => undef },
-    "Acme-BadExample-1.01 doesn't crash :-)");
 
 print "# Check that we ignore obviously silly files\n";
 eval { CPXXXAN::FileIndexer->new('t/Foo-123.456.ppm.zip') };
