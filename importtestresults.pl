@@ -13,7 +13,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
     ? '/web/cpxxxan'
     : '.';
 
-my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan');
+my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan', '', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
 # my $results = $testresults->selectall_arrayref(
@@ -30,6 +30,7 @@ my $insert = $cpxxxan->prepare('
 my $select = $cpxxxan->prepare('SELECT id FROM passes WHERE id = ?');
 
 # foreach my $testresult (@{$results}) {
+my $counter = 0;
 while(my $testresult = $sth->fetchrow_hashref()) {
     $select->execute($testresult->{id});
     if(!$select->fetchrow_array()) {
@@ -41,4 +42,6 @@ while(my $testresult = $sth->fetchrow_hashref()) {
         printf("id: %s\tdist: %s\tversion: %s\tperl: %s\n",
             $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl});
     }
+    $cpxxxan->commit() unless($counter++ % 5000);
 }
+$cpxxxan->commit();
