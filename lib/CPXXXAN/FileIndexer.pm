@@ -156,11 +156,17 @@ sub _parse_version_safely {
                     $_
                 }; \$$var
             };
-            $result = $c->reval($eval);
+            eval {
+                local $SIG{ALRM} = sub { die("Safe compartment timed out\n"); };
+                alarm(5); # Safe compartment can't turn this off
+                $result = $c->reval($eval);
+                alarm(0);
+                die($@) if($@);
+            };
         };
         # stuff that's my fault because of the Safe compartment
         # warn($eval) if($@);
-        if($@ =~ /trapped by operation mask/i) {
+        if($@ =~ /trapped by operation mask|safe compartment timed out/i) {
             warn("Unsafe code in \$VERSION\n$@\n$parsefile\n$eval");
             $result = undef;
         } elsif($@) {
