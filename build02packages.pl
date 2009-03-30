@@ -26,13 +26,13 @@ my $data = $cpxxxan->selectall_arrayref(qq{
      WHERE m.dist=d.dist AND
            m.distversion=d.distversion AND
            m.dist || '-' || m.distversion = (
-              SELECT dist || '-' || distversion
+              SELECT DISTINCT dist || '-' || distversion
                 FROM passes a
                WHERE perl='$perl' AND
                      a.dist = m.dist AND
                      a.distversion = m.distversion AND
                      normdistversion = (
-                         SELECT max(normdistversion) FROM passes b
+                         SELECT DISTINCT max(normdistversion) FROM passes b
                            WHERE dist=a.dist AND perl='$perl'
                      )
                GROUP BY dist

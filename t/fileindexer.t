@@ -5,17 +5,24 @@ use Test::More tests => 29;
 
 use CPXXXAN::FileIndexer;
 use File::Find::Rule;
+use Config;
 
 print "# can we read all the different types of file?\n";
 foreach my $archive (File::Find::Rule->file()->name('XML-Tiny-DOM-1.0*')->in('t')) {
-    is_deeply(
-        CPXXXAN::FileIndexer->new($archive)->modules(),
-        {
-            'XML::Tiny::DOM' => '1.0',
-            'XML::Tiny::DOM::Element' => '1.0'
-        },
-        "can read $archive and find module versions"
-    )
+    SKIP: {
+        skip "bzip2 not available", 1 if(
+            $archive =~ /(bz2|tbz)$/ &&
+            !(grep { -x "$_/bzip2" } split($Config{path_sep}, $ENV{PATH}))
+        );
+        is_deeply(
+            CPXXXAN::FileIndexer->new($archive)->modules(),
+            {
+                'XML::Tiny::DOM' => '1.0',
+                'XML::Tiny::DOM::Element' => '1.0'
+            },
+            "can read $archive and find module versions"
+        );
+    }
 }
 
 print "# make sure all the methods work on a good distro\n";

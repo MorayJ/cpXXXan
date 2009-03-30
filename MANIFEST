@@ -32,7 +32,7 @@ t/XML-Tiny-DOM-1.0.tbz
 t/XML-Tiny-DOM-1.0.tgz
 t/XML-Tiny-DOM-1.0.zip
 t/Bad-UseVersion-123.456.tar.gz
-findmostrecent.pl
 t/Acme-BadExample-1.01.tar.gz
 t/Bad-SplitPackage-234.567.tar.gz
 t/Bad-UseVars-123.456.tar.gz
+build02packages.pl

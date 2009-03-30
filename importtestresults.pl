@@ -5,8 +5,16 @@ use strict;
 
 use DBI;
 
-my $cpxxxan = DBI->connect('dbi:SQLite:dbname=db/cpXXXan');
-my $testresults = DBI->connect('dbi:SQLite:dbname=db/cpanstatsdatabase');
+# Configuration for DRC's laptop and for live
+use constant BACKPAN => -e '/web/cpxxxan/backpan'
+    ? '/web/cpxxxan/backpan'
+    : '/Users/david/BackPAN';
+use constant CPXXXANROOT => -e '/web/cpxxxan'
+    ? '/web/cpxxxan'
+    : '.';
+
+my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan');
+my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
 my $results = $testresults->selectall_arrayref(
     q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass' AND (dist LIKE 'DBI%' or dist LIKE 'DBD%')},

@@ -8,9 +8,15 @@ use File::Find::Rule;
 use DBI;
 use version;
 
-use constant BACKPAN => '/Users/david/BackPAN';
+# Configuration for DRC's laptop and for live
+use constant BACKPAN => -e '/web/cpxxxan/backpan'
+    ? '/web/cpxxxan/backpan'
+    : '/Users/david/BackPAN';
+use constant CPXXXANROOT => -e '/web/cpxxxan'
+    ? '/web/cpxxxan'
+    : '.';
 
-my $dbh = DBI->connect('dbi:SQLite:dbname=db/cpXXXan', '', '', { AutoCommit => 0 });
+my $dbh = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan', '', '', { AutoCommit => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
 my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, normmodversion, dist, distversion) VALUES (?, ?, ?, ?, ?)');
