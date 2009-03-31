@@ -21,7 +21,7 @@ my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsda
 #     # q{ AND (dist LIKE 'DBI%' or dist LIKE 'DBD%')},
 #     {Slice => {}}
 # );
-my $sth = $testresults->prepare(q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass'});
+my $sth = $testresults->prepare(q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
 $sth->execute();
 
 my $insert = $cpxxxan->prepare('
