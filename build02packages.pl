@@ -18,7 +18,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $perl = shift();
 die("Must specify a perl, eg\n\n  \$ $0 5.6.2\n") unless($perl);
 
-my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan');
+my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
 my $data = $cpxxxan->selectall_arrayref(qq{
     SELECT module, modversion, d.dist, d.distversion, d.file

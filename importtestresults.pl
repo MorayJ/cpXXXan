@@ -13,7 +13,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
     ? '/web/cpxxxan'
     : '.';
 
-my $cpxxxan = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan', '', '', { AutoCommit => 0 });
+my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
 # my $results = $testresults->selectall_arrayref(

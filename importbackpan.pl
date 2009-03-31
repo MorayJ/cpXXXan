@@ -16,7 +16,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
     ? '/web/cpxxxan'
     : '.';
 
-my $dbh = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpXXXan', '', '', { AutoCommit => 0 });
+my $dbh = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
 my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, normmodversion, dist, distversion) VALUES (?, ?, ?, ?, ?)');
