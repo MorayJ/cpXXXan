@@ -30,16 +30,14 @@ foreach my $distfile (
     my $dist = eval { CPXXXAN::FileIndexer->new($distfile); };
     next if($@);
     $distfile =~ s!(??{BACKPAN})/authors/id/!!;
-    print "$distfile\n";
 
     # don't index dev versions
-    if($dist->isdevversion()) {
-        print "  SKIP - dev release\n";
-        next;
-    }
+    next if($dist->isdevversion());
 
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
+
+    print "DIST: $distfile\n";
 
     my %modules = %{$dist->modules()};
     # { local $SIG{__WARN__} = sub {
@@ -55,14 +53,16 @@ foreach my $distfile (
         $dist->dist(), $dist->distversion(),
         $distfile
     );
-    printf("  %s: %s\n", $dist->dist(), $dist->distversion());
+    printf("DIST:   %s: %s\n", $dist->dist(), $dist->distversion());
     foreach(keys %modules) {
         $modules{$_} ||= 0;
         # catch broken versions eg Text-PDF-API: 0.01_12_snapshot
         my $normmodversion = eval { version->new($modules{$_})->numify(); } || 0;
 
         $insertmod->execute($_, $modules{$_}, $normmodversion, $dist->dist(), $dist->distversion());
-        printf("    %s: %s (%s)\n", $_, $modules{$_}, $normmodversion);
+        printf("DIST:     %s: %s (%s)\n", $_, $modules{$_}, $normmodversion);
     }
     $dbh->commit();
 }
+$dbh->commit();
+$dbh->disconnect();

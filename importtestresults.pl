@@ -39,9 +39,10 @@ while(my $testresult = $sth->fetchrow_hashref()) {
             eval { version->new($testresult->{version})->numify() } || 0,
             $testresult->{perl}
         );
-        printf("id: %s\tdist: %s\tversion: %s\tperl: %s\n",
+        printf("PASS: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
             $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl});
     }
     $cpxxxan->commit() unless($counter++ % 5000);
 }
 $cpxxxan->commit();
+$cpxxxan->disconnect();
