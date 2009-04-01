@@ -16,11 +16,6 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
-# my $results = $testresults->selectall_arrayref(
-#     q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass'},
-#     # q{ AND (dist LIKE 'DBI%' or dist LIKE 'DBD%')},
-#     {Slice => {}}
-# );
 my $sth = $testresults->prepare(q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
 $sth->execute();
 

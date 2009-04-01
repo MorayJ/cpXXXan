@@ -20,27 +20,34 @@ die("Must specify a perl, eg\n\n  \$ $0 5.6.2\n") unless($perl);
 
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
+my @modules = ();
 my $query = qq{
-    SELECT module, modversion, d.dist, d.distversion, d.file
-      FROM modules m, dists d
-     WHERE m.dist=d.dist AND
-           m.distversion=d.distversion AND
-           m.dist || '-' || m.distversion = (
-              SELECT DISTINCT dist || '-' || distversion
-                FROM passes p1
-               WHERE perl='$perl' AND
-                     p1.dist = m.dist AND
-                     p1.distversion = m.distversion AND
-                     normdistversion = (
-                         SELECT DISTINCT max(normdistversion) FROM passes p2
-                           WHERE dist=p1.dist AND perl=p1.perl
-                     )
-               GROUP BY dist
+    SELECT DISTINCT dist, distversion
+      FROM passes p1
+     WHERE normdistversion=(
+             SELECT MAX(normdistversion)
+               FROM passes p2
+              WHERE p1.dist=p2.dist AND
+                    perl='$perl'
            )
-  ORDER BY module
 };
-print $query;
-my $data = $cpxxxan->selectall_arrayref($query, {Slice => {}});
+my $dist_maxdistversion = $cpxxxan->selectall_arrayref($query, {Slice => {}});
+foreach my $record (@{$dist_maxdistversion}) {
+    printf("%s: %s\n", $record->{dist}, $record->{distversion});
+    my $query = q{
+        SELECT module, modversion, file
+	  FROM modules, dists
+	 WHERE modules.dist=dists.dist AND
+	       modules.distversion=dists.distversion AND
+	       modules.dist='}.$record->{dist}.q{' AND
+	       modules.distversion='}.$record->{distversion}.q{'
+    };
+    my $modules = $cpxxxan->selectall_arrayref($query, {Slice => {}});
+    foreach my $module (@{$modules}) {
+        printf("  %s: %s %s\n", map { $module->{$_} } qw(module modversion file));
+	push @modules, $module;
+    }
+}
 
 mkdir CPXXXANROOT."/cp${perl}an";
 mkdir CPXXXANROOT."/cp${perl}an/modules";
@@ -56,11 +63,11 @@ open(my $packagesfile, '>', "cp${perl}an/modules/02packages.details.txt")
     || die("Can't write cp${perl}an/modules/02packages.details.txt\n");
 print $packagesfile "Description: This is a whitespace-seperated file.\n";
 print $packagesfile "Description: Each line is modulename moduleversion filename.\n";
-print $packagesfile "Line-Count: ".@{$data}."\n";
+print $packagesfile "Line-Count: ".@modules."\n";
 print $packagesfile "Last-Updated: ".HTTP::Date::time2str()."\n";
 print $packagesfile "\n";
 print $packagesfile sprintf(
     "%s %s %s\n", $_->{module}, $_->{modversion}, $_->{'file'}
-) foreach (@{$data});
+) foreach (sort { $a->{module} cmp $b->{module} } @modules);
 close($packagesfile);
 system(qw(gzip -9f), "cp${perl}an/modules/02packages.details.txt");
