@@ -19,7 +19,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $dbh = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
-my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, normmodversion, dist, distversion) VALUES (?, ?, ?, ?, ?)');
+my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, dist, distversion) VALUES (?, ?, ?, ?)');
 
 foreach my $distfile (
   File::Find::Rule
@@ -57,10 +57,9 @@ foreach my $distfile (
     foreach(keys %modules) {
         $modules{$_} ||= 0;
         # catch broken versions eg Text-PDF-API: 0.01_12_snapshot
-        my $normmodversion = eval { version->new($modules{$_})->numify(); } || 0;
 
-        $insertmod->execute($_, $modules{$_}, $normmodversion, $dist->dist(), $dist->distversion());
-        printf("DIST:     %s: %s (%s)\n", $_, $modules{$_}, $normmodversion);
+        $insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion());
+        printf("DIST:     %s: %s\n", $_, $modules{$_});
     }
     $dbh->commit();
 }

@@ -20,25 +20,27 @@ die("Must specify a perl, eg\n\n  \$ $0 5.6.2\n") unless($perl);
 
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
-my $data = $cpxxxan->selectall_arrayref(qq{
+my $query = qq{
     SELECT module, modversion, d.dist, d.distversion, d.file
       FROM modules m, dists d
      WHERE m.dist=d.dist AND
            m.distversion=d.distversion AND
            m.dist || '-' || m.distversion = (
               SELECT DISTINCT dist || '-' || distversion
-                FROM passes a
+                FROM passes p1
                WHERE perl='$perl' AND
-                     a.dist = m.dist AND
-                     a.distversion = m.distversion AND
+                     p1.dist = m.dist AND
+                     p1.distversion = m.distversion AND
                      normdistversion = (
-                         SELECT DISTINCT max(normdistversion) FROM passes b
-                           WHERE dist=a.dist AND perl='$perl'
+                         SELECT DISTINCT max(normdistversion) FROM passes p2
+                           WHERE dist=p1.dist AND perl=p1.perl
                      )
                GROUP BY dist
            )
   ORDER BY module
-}, {Slice => {}});
+};
+print $query;
+my $data = $cpxxxan->selectall_arrayref($query, {Slice => {}});
 
 mkdir CPXXXANROOT."/cp${perl}an";
 mkdir CPXXXANROOT."/cp${perl}an/modules";
