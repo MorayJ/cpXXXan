@@ -52,6 +52,11 @@ foreach my $record (@{$dist_maxdistversion}) {
 mkdir CPXXXANROOT."/cp${perl}an";
 mkdir CPXXXANROOT."/cp${perl}an/modules";
 mkdir CPXXXANROOT."/cp${perl}an/authors";
+
+unlink CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
+unlink CPXXXANROOT."/cp${perl}an/modules/03modlist.data.gz";
+unlink CPXXXANROOT."/cp${perl}an/authors/id";
+
 symlink BACKPAN."/authors/01mailrc.txt.gz",
      CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
 symlink BACKPAN."/modules/03modlist.data.gz",
