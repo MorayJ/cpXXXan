@@ -15,6 +15,7 @@ use Data::Dumper;
 use Archive::Tar;
 use Archive::Zip;
 use Safe;
+use YAML qw(LoadFile);
 # safe to load, load now because it's commonly used for $VERSION
 use version;
 
@@ -219,9 +220,25 @@ sub modules {
         my $tempdir = _unarchive($self->{file});
         _popd();
 
+	my $meta = (glob("$tempdir/*/META.yml"))[0];
+	my $ignore = join('|', qw(t inc xt));
+        if(-e $meta) {
+	    my $yaml = eval { LoadFile($meta); };
+	    if(!$@ &&
+	        UNIVERSAL::isa($yaml, 'HASH') &&
+		exists($yaml->{no_index}) &&
+		UNIVERSAL::isa($yaml->{no_index}, 'HASH') &&
+		exists($yaml->{no_index}->{directory}) &&
+		UNIVERSAL::isa($yaml->{no_index}->{directory}, 'ARRAY')
+	    ) {
+	        $ignore = join('|', $ignore, @{$yaml->{no_index}->{directory}});
+            } elsif(!$@) {
+	        print Dumper($yaml);
+	    }
+	}
         # find modules
         my @PMs = grep {
-            $_ !~ m{^\Q$tempdir\E/[^/]+/(t|inc|xt)}
+            $_ !~ m{^\Q$tempdir\E/[^/]+/($ignore)}
         } File::Find::Rule->file()->name('*.pm')->in($tempdir);
         foreach my $PM (@PMs) {
             local $/ = undef;
