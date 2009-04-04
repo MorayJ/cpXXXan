@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use CPAN::ParseDistribution;
+use CPAN::Checksums qw(updatedir);
 use File::Find::Rule;
 use DBI;
 use version;
@@ -55,3 +56,7 @@ foreach my $distfile (
 }
 $dbh->commit();
 $dbh->disconnect();
+
+foreach(File::Find::Rule->directory()->mindepth(3)->in(BACKPAN."/authors/id")) {
+    print "Updated $_/CHECKSUMS\n" if(updatedir($_) == 2);
+}
