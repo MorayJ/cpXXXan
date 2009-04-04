@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use CPXXXAN::FileIndexer;
+use CPAN::ParseDistribution;
 use File::Find::Rule;
 use DBI;
 use version;
@@ -16,7 +16,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
     ? '/web/cpxxxan'
     : '.';
 
-my $dbh = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
+my $dbh = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0, PrintError => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
 my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
 my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, dist, distversion) VALUES (?, ?, ?, ?)');
@@ -27,7 +27,7 @@ foreach my $distfile (
     ->name(qr/\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/)
     ->in(BACKPAN.'/authors/id')
 ) {
-    my $dist = eval { CPXXXAN::FileIndexer->new($distfile); };
+    my $dist = eval { CPAN::ParseDistribution->new($distfile); };
     next if($@);
     $distfile =~ s!(??{BACKPAN})/authors/id/!!;
 
@@ -37,29 +37,19 @@ foreach my $distfile (
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
 
-    print "DIST: $distfile\n";
+    print "FILE: $distfile\n";
 
     my %modules = %{$dist->modules()};
-    # { local $SIG{__WARN__} = sub {
-    #       if(join('', @_) =~ /unsafe code/i) {
-    #           open(ERRLOG, '>>errorlog');
-    #           print ERRLOG "---\n$distfile\n\n".join('', @_)."\n";
-    #           close(ERRLOG);
-    #       }
-    #   };
-    #   %modules = %{$dist->modules()};
-    # }
     $insertdist->execute(
         $dist->dist(), $dist->distversion(),
         $distfile
-    );
+    ) &&
     printf("DIST:   %s: %s\n", $dist->dist(), $dist->distversion());
     foreach(keys %modules) {
         $modules{$_} ||= 0;
-        # catch broken versions eg Text-PDF-API: 0.01_12_snapshot
 
-        $insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion());
-        printf("DIST:     %s: %s\n", $_, $modules{$_});
+	$insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion()) &&
+        printf("MOD:      %s: %s\n", $_, $modules{$_});
     }
     $dbh->commit();
 }

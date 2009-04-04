@@ -110,6 +110,9 @@ my $indexshtml = q{
   <html><head><title>
     CPX.X.XAN: the Comprehensive Perl X.X.X Archive Network
   </title></head><body>
+  <p>
+    <a href=http://www.cantrell.org.uk/cgit/cgit.cgi/cpxxxan/>Source code</a> |
+    <a href=mailto:david@cantrell.org.uk?Subject=cpX.X.Xan%20bug%20report>Report bugs</a>
   <h1>Welcome to CPX.X.XAN</h1>
   To use this mirror, point your CPAN.pm config at
   http://cpX.X.Xan.barnyard.co.uk/
