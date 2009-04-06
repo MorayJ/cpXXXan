@@ -9,6 +9,8 @@ use File::Find::Rule;
 use DBI;
 use version;
 
+my $verbose = (shift() eq '-v') ? 1 : 0;
+
 # Configuration for DRC's laptop and for live
 use constant BACKPAN => -e '/web/cpxxxan/backpan'
     ? '/web/cpxxxan/backpan'
@@ -38,19 +40,23 @@ foreach my $distfile (
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
 
-    print "FILE: $distfile\n";
+    print "FILE: $distfile\n"; 
 
     my %modules = %{$dist->modules()};
-    $insertdist->execute(
+    if($insertdist->execute(
         $dist->dist(), $dist->distversion(),
         $distfile
-    ) &&
-    printf("DIST:   %s: %s\n", $dist->dist(), $dist->distversion());
+    )) {
+        printf("DIST:   %s: %s\n", $dist->dist(), $dist->distversion())
+	    if($verbose);
+    }
     foreach(keys %modules) {
         $modules{$_} ||= 0;
 
-	$insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion()) &&
-        printf("MOD:      %s: %s\n", $_, $modules{$_});
+	if($insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion())) {
+            printf("MOD:      %s: %s\n", $_, $modules{$_})
+	        if($verbose);
+        }
     }
     $dbh->commit();
 }
@@ -58,5 +64,6 @@ $dbh->commit();
 $dbh->disconnect();
 
 foreach(File::Find::Rule->directory()->mindepth(3)->in(BACKPAN."/authors/id")) {
+    print "Let's see if $_ needs a new CHECKSUMS ...\n";
     print "Updated $_/CHECKSUMS\n" if(updatedir($_) == 2);
 }

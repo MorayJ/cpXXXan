@@ -5,6 +5,8 @@ use strict;
 
 use DBI;
 
+my $verbose = (shift() eq '-v') ? 1 : 0;
+
 # Configuration for DRC's laptop and for live
 use constant BACKPAN => -e '/web/cpxxxan/backpan'
     ? '/web/cpxxxan/backpan'
@@ -35,7 +37,8 @@ while(my $testresult = $sth->fetchrow_hashref()) {
             $testresult->{perl}
         );
         printf("PASS: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
-            $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl});
+            $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl}
+	) if($verbose);
     }
     $cpxxxan->commit() unless($counter++ % 5000);
 }

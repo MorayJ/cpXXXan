@@ -33,7 +33,8 @@ my $query = qq{
 };
 my $dist_maxdistversion = $cpxxxan->selectall_arrayref($query, {Slice => {}});
 foreach my $record (@{$dist_maxdistversion}) {
-    printf("DIST: %s: %s\n", $record->{dist}, $record->{distversion});
+    printf("DIST: %s: %s\n", $record->{dist}, $record->{distversion})
+        if($ENV{VERBOSE});
     my $query = q{
         SELECT module, modversion, file
 	  FROM modules, dists
@@ -44,7 +45,8 @@ foreach my $record (@{$dist_maxdistversion}) {
     };
     my $modules = $cpxxxan->selectall_arrayref($query, {Slice => {}});
     foreach my $module (@{$modules}) {
-        printf("MOD:    %s: %s %s\n", map { $module->{$_} } qw(module modversion file));
+        printf("MOD:    %s: %s %s\n", map { $module->{$_} } qw(module modversion file))
+	    if($ENV{VERBOSE});
 	push @modules, $module;
     }
 }
