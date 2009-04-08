@@ -112,6 +112,17 @@ my $indexshtml = q{
   <html><head><title>
     CPX.X.XAN: the Comprehensive Perl X.X.X Archive Network
   </title></head><body>
+  <TABLE ALIGN=RIGHT><TR><TD WIDTH=100 ALIGN=CENTER>
+    <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+      <input type="hidden" name="cmd" value="_xclick">
+      <input type="hidden" name="business" value="david@cantrell.org.uk">
+      <input type="hidden" name="item_name" value="CPX.X.XAN">
+      <input type="hidden" name="no_note" value="1">
+      <input type="hidden" name="currency_code" value="EUR">
+      <input type="hidden" name="tax" value="0">
+      <input type="image" src="https://www.paypal.com/images/x-click-butcc-donate.gif" border="0" name="submit" alt="Make payments with PayPal">
+    </form>
+  </TD></TR></TABLE>
   <p>
     <a href=http://www.cantrell.org.uk/cgit/cgit.cgi/cpxxxan/>Source code</a> |
     <a href=mailto:david@cantrell.org.uk?Subject=cpX.X.Xan%20bug%20report>Report bugs</a>
