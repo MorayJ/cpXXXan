@@ -63,7 +63,6 @@ foreach my $distfile (
 $dbh->commit();
 $dbh->disconnect();
 
-foreach(File::Find::Rule->directory()->mindepth(3)->in(BACKPAN."/authors/id")) {
-    print "Let's see if $_ needs a new CHECKSUMS ...\n";
-    print "Updated $_/CHECKSUMS\n" if(updatedir($_) == 2);
+foreach my $dir (File::Find::Rule->directory()->mindepth(3)->in(BACKPAN."/authors/id")) {
+    print "Updated $dir/CHECKSUMS\n" if(updatedir($dir) == 2);
 }
