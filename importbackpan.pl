@@ -9,7 +9,7 @@ use File::Find::Rule;
 use DBI;
 use version;
 
-my $verbose = (shift() eq '-v') ? 1 : 0;
+my $verbose = (@ARGV && shift() eq '-v') ? 1 : 0;
 
 # Configuration for DRC's laptop and for live
 use constant BACKPAN => -e '/web/cpxxxan/backpan'
@@ -40,6 +40,11 @@ foreach my $distfile (
     $chkexists->execute($dist->dist(), $dist->distversion());
     next if($chkexists->fetchrow_array());
 
+    # catch, eg, M/MA/MARCEL/-0.01.tar.gz or blahblah-1.0-wibble.tar.gz
+    if(!$dist->dist() || $dist->distversion() =~ /[^0-9\.]/) {
+        print "SKIP:  $distfile\n" if($verbose);
+	next;
+    }
     print "FILE: $distfile\n"; 
 
     my %modules = %{$dist->modules()};
