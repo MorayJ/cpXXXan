@@ -45,7 +45,7 @@ foreach my $distfile (
         print "SKIP:  $distfile\n" if($verbose);
 	next;
     }
-    print "FILE: $distfile\n"; 
+    print "FILE: $distfile\n" if($verbose); 
 
     my %modules = %{$dist->modules()};
     if($insertdist->execute(
@@ -65,9 +65,10 @@ foreach my $distfile (
     }
     $dbh->commit();
 }
+$chkexists->finish();
 $dbh->commit();
 $dbh->disconnect();
 
 foreach my $dir (File::Find::Rule->directory()->mindepth(3)->in(BACKPAN."/authors/id")) {
-    print "Updated $dir/CHECKSUMS\n" if(updatedir($dir) == 2);
+    print "Updated $dir/CHECKSUMS\n" if(updatedir($dir) == 2 && $verbose);
 }
