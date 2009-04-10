@@ -5,7 +5,7 @@ use strict;
 
 use DBI;
 
-my $verbose = (shift() eq '-v') ? 1 : 0;
+my $verbose = (@ARGV && shift() eq '-v') ? 1 : 0;
 
 # Configuration for DRC's laptop and for live
 use constant BACKPAN => -e '/web/cpxxxan/backpan'
