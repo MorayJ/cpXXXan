@@ -31,14 +31,20 @@ my $counter = 0;
 while(my $testresult = $sth->fetchrow_hashref()) {
     $select->execute($testresult->{id});
     if(!$select->fetchrow_array()) {
-        $insert->execute(
-            $testresult->{id}, $testresult->{dist}, $testresult->{version},
-            eval { version->new($testresult->{version})->numify() } || 0,
-            $testresult->{perl}
-        );
-        printf("PASS: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
-            $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl}
-	) if($verbose);
+	if($testresult->{version} !~ /_/) {
+            $insert->execute(
+                $testresult->{id}, $testresult->{dist}, $testresult->{version},
+                eval { version->new($testresult->{version})->numify() } || 0,
+                $testresult->{perl}
+            );
+            printf("PASS: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
+                $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl}
+	    ) if($verbose);
+	} elsif($verbose) {
+            printf("SKIP: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
+                $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl}
+	    );
+	}
     }
     $cpxxxan->commit() unless($counter++ % 5000);
 }
