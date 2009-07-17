@@ -60,6 +60,7 @@ unlink CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
 unlink CPXXXANROOT."/cp${perl}an/modules/03modlist.data.gz";
 unlink CPXXXANROOT."/cp${perl}an/authors/id";
 unlink CPXXXANROOT."/cp${perl}an/other-mirrors.shtml";
+unlink CPXXXANROOT."/cp${perl}an/howitworks.shtml";
 
 symlink BACKPAN."/authors/01mailrc.txt.gz",
     CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
@@ -69,6 +70,8 @@ symlink BACKPAN."/authors/id",
     CPXXXANROOT."/cp${perl}an/authors/id";
 symlink CPXXXANROOT."/other-mirrors.shtml",
     CPXXXANROOT."/cp${perl}an/other-mirrors.shtml";
+symlink CPXXXANROOT."/src/howitworks.shtml",
+    CPXXXANROOT."/cp${perl}an/howitworks.shtml";
 
 open(my $packagesfile, '>', "cp${perl}an/modules/02packages.details.txt")
     || die("Can't write cp${perl}an/modules/02packages.details.txt\n");
@@ -131,6 +134,13 @@ my $indexshtml = q{
   http://cpX.X.Xan.barnyard.co.uk/
   <h1>Other similar mirrors</h1>
   <!--#include virtual="other-mirrors.shtml"-->
+  <!--#include virtual="how-it-works.shtml"-->
+  <h1>How it works</h1>
+  <p>When you tell CPAN.pm to install, for example, DBI, it looks in the CPAN index (which it downloads from your chosen CPAN mirror) to see which is the most recent distribution to contain that module.  It then downloads that distribution, unpacks it, looks to see if it declares any other modules as pre-requisites, looks them up in the index, and so on.
+  <p>The normal CPAN index only contains the most recent versions of modules and distributions.
+  <p>This site has its own index, which uses <a href=http://cpantesters.org>CPAN Testers</a> test results to see which is the most recent version of each distribution to pass its tests on your chosen version of perl.  It only lists known-working versions.  This means that when you try to install a module not only will you get a working version of that module (if not perhaps the most up-to-date), but you'll also get working versions of all its pre-requisites.  So, for example, if you're using the CP5.6.2AN mirror, and ask for DBI, you'll get DBI version 1.604, cos <a href=http://cpantesters.org/distro/D/DBI.html?grade=2&perlmat=2&patches=2&oncpan=2&distmat=2&perlver=5.6.2&osname=ALL>that's the last version to pass its tests with that perl</a>.
+  <p>Of course, you can still get bleeding-edge versions of any distribution through this site.  You just need to request them specifically such as <a href=http://cp5.6.2an.barnyard.co.uk/authors/id/T/TI/TIMB/DBI-1.609.tar.gz>TIMB/DBI-1.609.tar.gz</a>.
+
   </body></html>};
 $indexshtml =~ s/X\.X\.X/$perl/g;
 open(INDEXSHTML, '>', CPXXXANROOT."/cp${perl}an/index.shtml")
