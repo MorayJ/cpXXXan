@@ -1,0 +1,7 @@
+0  7 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;./importbackpan.pl
+
+45 7 * * * cd /web/cpxxxan;./getcpantestresults.sh;./importtestresults.pl;./build02packages.pl 5.5.3;./build02packages.pl 5.6.2;./build02packages.pl 5.8.8;./build02packages.pl 5.10.0
+
+# clear out, so we delete any problem records
+0  0   * * 0 echo 'delete from passes;'|mysql -u root cpXXXan
+
