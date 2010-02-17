@@ -18,6 +18,9 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $perl = shift();
 die("Must specify a perl, eg\n\n  \$ $0 5.6.2\n") unless($perl);
 
+my $os = '';
+$os = $perl if($perl =~ /[a-z]/i);
+
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
 my @modules = ();
@@ -28,9 +31,12 @@ my $query = qq{
              SELECT MAX(normdistversion)
                FROM passes p2
               WHERE p1.dist=p2.dist AND
-                    perl='$perl'
+                    FILTER
            )
 };
+if($os) { $query =~ s/FILTER/osname='$os'/ }
+ else   { $query =~ s/FILTER/perl='$perl'/ }
+
 my $dist_maxdistversion = $cpxxxan->selectall_arrayref($query, {Slice => {}});
 foreach my $record (@{$dist_maxdistversion}) {
     printf("DIST: %s: %s\n", $record->{dist}, $record->{distversion})
@@ -51,30 +57,32 @@ foreach my $record (@{$dist_maxdistversion}) {
     }
 }
 
-mkdir CPXXXANROOT."/cp${perl}an";
-mkdir CPXXXANROOT."/cp${perl}an/modules";
-mkdir CPXXXANROOT."/cp${perl}an/authors";
+my $mirror = $os ? $os : $perl;
+
+mkdir CPXXXANROOT."/cp${mirror}an";
+mkdir CPXXXANROOT."/cp${mirror}an/modules";
+mkdir CPXXXANROOT."/cp${mirror}an/authors";
 mkdir CPXXXANROOT."/apache-conf";
 
-unlink CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
-unlink CPXXXANROOT."/cp${perl}an/modules/03modlist.data.gz";
-unlink CPXXXANROOT."/cp${perl}an/authors/id";
-unlink CPXXXANROOT."/cp${perl}an/other-mirrors.shtml";
-unlink CPXXXANROOT."/cp${perl}an/howitworks.shtml";
+unlink CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
+unlink CPXXXANROOT."/cp${mirror}an/modules/03modlist.data.gz";
+unlink CPXXXANROOT."/cp${mirror}an/authors/id";
+unlink CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
+unlink CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
 
 symlink BACKPAN."/authors/01mailrc.txt.gz",
-    CPXXXANROOT."/cp${perl}an/authors/01mailrc.txt.gz";
+    CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
 symlink BACKPAN."/modules/03modlist.data.gz",
-    CPXXXANROOT."/cp${perl}an/modules/03modlist.data.gz";
+    CPXXXANROOT."/cp${mirror}an/modules/03modlist.data.gz";
 symlink BACKPAN."/authors/id",
-    CPXXXANROOT."/cp${perl}an/authors/id";
+    CPXXXANROOT."/cp${mirror}an/authors/id";
 symlink CPXXXANROOT."/other-mirrors.shtml",
-    CPXXXANROOT."/cp${perl}an/other-mirrors.shtml";
+    CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 symlink CPXXXANROOT."/src/howitworks.shtml",
-    CPXXXANROOT."/cp${perl}an/howitworks.shtml";
+    CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
 
-open(my $packagesfile, '>', "cp${perl}an/modules/02packages.details.txt")
-    || die("Can't write cp${perl}an/modules/02packages.details.txt\n");
+open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
+    || die("Can't write cp${mirror}an/modules/02packages.details.txt\n");
 print $packagesfile "Description: This is a whitespace-seperated file.\n";
 print $packagesfile "Description: Each line is modulename moduleversion filename.\n";
 print $packagesfile "Line-Count: ".@modules."\n";
@@ -84,7 +92,7 @@ print $packagesfile sprintf(
     "%s %s %s\n", $_->{module}, $_->{modversion}, $_->{'file'}
 ) foreach (sort { $a->{module} cmp $b->{module} } @modules);
 close($packagesfile);
-system(qw(gzip -9f), "cp${perl}an/modules/02packages.details.txt");
+system(qw(gzip -9f), "cp${mirror}an/modules/02packages.details.txt");
 
 my $apacheconf = q{
 <VirtualHost cpX.X.Xan.barnyard.co.uk>
@@ -105,9 +113,9 @@ my $apacheconf = q{
   </Directory>
 </VirtualHost>
 };
-$apacheconf =~ s/X\.X\.X/$perl/g;
-open(APACHECONF, '>', CPXXXANROOT."/apache-conf/cp${perl}an.conf")
-    || die("Can't write ".CPXXXANROOT."/apache-conf/cp${perl}an.conf\n");
+$apacheconf =~ s/X\.X\.X/$mirror/g;
+open(APACHECONF, '>', CPXXXANROOT."/apache-conf/cp${mirror}an.conf")
+    || die("Can't write ".CPXXXANROOT."/apache-conf/cp${mirror}an.conf\n");
 print APACHECONF $apacheconf;
 close(APACHECONF);
 
@@ -137,9 +145,9 @@ my $indexshtml = q{
   <!--#include virtual="howitworks.shtml"-->
 
   </body></html>};
-$indexshtml =~ s/X\.X\.X/$perl/g;
-open(INDEXSHTML, '>', CPXXXANROOT."/cp${perl}an/index.shtml")
-    || die("Can't write ".CPXXXANROOT."/cp${perl}an/index.shtml\n");
+$indexshtml =~ s/X\.X\.X/$mirror/g;
+open(INDEXSHTML, '>', CPXXXANROOT."/cp${mirror}an/index.shtml")
+    || die("Can't write ".CPXXXANROOT."/cp${mirror}an/index.shtml\n");
 print INDEXSHTML $indexshtml;
 close(INDEXSHTML);
 
