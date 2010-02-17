@@ -18,10 +18,12 @@ CREATE TABLE passes (
     dist            VARCHAR(256),
     distversion     VARCHAR(24),
     normdistversion VARCHAR(24),
-    perl            VARCHAR(8)
+    perl            VARCHAR(8),
+    osname          VARCHAR(16)
 ) ENGINE = 'InnoDB';
 
 CREATE        INDEX pass_distperlnormversion ON passes(dist, perl, normdistversion);
+CREATE        INDEX pass_osname              ON passes(osname);
 
 CREATE UNIQUE INDEX passid_idx ON passes(id);
 CREATE UNIQUE INDEX dists_idx ON dists(dist, distversion);

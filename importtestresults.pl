@@ -18,11 +18,11 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:SQLite:dbname='.CPXXXANROOT.'/db/cpanstatsdatabase');
 
-my $sth = $testresults->prepare(q{SELECT id, dist, version, perl FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
+my $sth = $testresults->prepare(q{SELECT id, dist, version, perl, osname FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
 $sth->execute();
 
 my $insert = $cpxxxan->prepare('
-    INSERT INTO passes (id, dist, distversion, normdistversion, perl) VALUES (?, ?, ?, ?, ?)
+    INSERT INTO passes (id, dist, distversion, normdistversion, perl, osname) VALUES (?, ?, ?, ?, ?, ?)
 ');
 my $select = $cpxxxan->prepare('SELECT id FROM passes WHERE id = ?');
 
@@ -35,7 +35,8 @@ while(my $testresult = $sth->fetchrow_hashref()) {
             $insert->execute(
                 $testresult->{id}, $testresult->{dist}, $testresult->{version},
                 eval { version->new($testresult->{version})->numify() } || 0,
-                $testresult->{perl}
+                $testresult->{perl},
+		$testresult->{osname}
             );
             printf("PASS: id: %s\tdist: %s\tversion: %s\tperl: %s\n",
                 $testresult->{id}, $testresult->{dist}, $testresult->{version}, $testresult->{perl}
