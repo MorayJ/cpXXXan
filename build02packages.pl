@@ -23,21 +23,28 @@ $os = $perl if($perl =~ /[a-z]/i);
 
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
+(my $view = 'relevantpasses'.$os.$perl) =~ s/\W//g;
+
 my @modules = ();
 my $query = qq{
-    SELECT DISTINCT dist, distversion
-      FROM passes p1
-     WHERE normdistversion=(
-             SELECT MAX(normdistversion)
-               FROM passes p2
-              WHERE p1.dist=p2.dist AND
-                    FILTER
-           )
+  CREATE OR REPLACE VIEW $view AS
+    SELECT * FROM passes WHERE FILTER
 };
 if($os) { $query =~ s/FILTER/osname='$os'/ }
  else   { $query =~ s/FILTER/perl='$perl'/ }
 
+$cpxxxan->do($query);
+$query = qq{
+    SELECT DISTINCT dist, distversion
+      FROM $view p1
+     WHERE normdistversion=(
+             SELECT MAX(normdistversion)
+	       FROM $view p2
+              WHERE p1.dist=p2.dist
+	   )
+};
 my $dist_maxdistversion = $cpxxxan->selectall_arrayref($query, {Slice => {}});
+
 foreach my $record (@{$dist_maxdistversion}) {
     printf("DIST: %s: %s\n", $record->{dist}, $record->{distversion})
         if($ENV{VERBOSE});
