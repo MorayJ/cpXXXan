@@ -164,7 +164,7 @@ open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
     || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml");
 print OTHERMIRRORS '<ul>';
 print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".uc($_)."</a>"
-    foreach(grep { /^cp5\.\d+\.\d+an/ } readdir(DIR));
+    foreach(grep { /^cp.+an/ } readdir(DIR));
 print OTHERMIRRORS '</ul>';
 close(OTHERMIRRORS);
 closedir(DIR);
