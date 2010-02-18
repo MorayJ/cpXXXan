@@ -166,7 +166,7 @@ print OTHERMIRRORS '<ul>';
 print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".
   uc(substr($_, 0, 2)).
   lc(substr($_, 2, length($_) - 4)).
-  uc(substr($_, -2).
+  uc(substr($_, -2)).
   "</a>"
     foreach(grep { /^cp.+an/ } readdir(DIR));
 print OTHERMIRRORS '</ul>';
