@@ -163,7 +163,11 @@ opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT.")\n");
 open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
     || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml");
 print OTHERMIRRORS '<ul>';
-print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".uc($_)."</a>"
+print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".
+  uc(substr($_, 0, 2)).
+  lc(substr($_, 2, length($_) - 4)).
+  uc(substr($_, -2).
+  "</a>"
     foreach(grep { /^cp.+an/ } readdir(DIR));
 print OTHERMIRRORS '</ul>';
 close(OTHERMIRRORS);
