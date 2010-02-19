@@ -45,18 +45,19 @@ $query = qq{
 };
 my $dist_maxdistversion = $cpxxxan->selectall_arrayref($query, {Slice => {}});
 
+my $modules_sth = $cpxxxan->prepare(q{
+    SELECT module, modversion, file
+      FROM modules, dists
+     WHERE modules.dist=dists.dist AND
+           modules.distversion=dists.distversion AND
+           modules.dist = ? AND
+           modules.distversion = ?
+});
 foreach my $record (@{$dist_maxdistversion}) {
     printf("DIST: %s: %s\n", $record->{dist}, $record->{distversion})
         if($ENV{VERBOSE});
-    my $query = q{
-        SELECT module, modversion, file
-	  FROM modules, dists
-	 WHERE modules.dist=dists.dist AND
-	       modules.distversion=dists.distversion AND
-	       modules.dist='}.$record->{dist}.q{' AND
-	       modules.distversion='}.$record->{distversion}.q{'
-    };
-    my $modules = $cpxxxan->selectall_arrayref($query, {Slice => {}});
+    $modules_sth->execute($record->{dist}, $record->{distversion});
+    my $modules = $modules_sth->fetchall_arrayref({});
     foreach my $module (@{$modules}) {
         printf("MOD:    %s: %s %s\n", map { $module->{$_} } qw(module modversion file))
 	    if($ENV{VERBOSE});
@@ -168,7 +169,7 @@ print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".
   lc(substr($_, 2, length($_) - 4)).
   uc(substr($_, -2)).
   "</a>"
-    foreach(grep { /^cp.+an/ } readdir(DIR));
+    foreach(sort grep { /^cp.+an/ } readdir(DIR));
 print OTHERMIRRORS '</ul>';
 close(OTHERMIRRORS);
 closedir(DIR);
