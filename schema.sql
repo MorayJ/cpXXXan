@@ -22,11 +22,13 @@ CREATE TABLE passes (
     osname          VARCHAR(16)
 ) ENGINE = 'InnoDB';
 
+CREATE        INDEX pass_normdistversion ON passes(normdistversion);
 CREATE        INDEX pass_dist            ON passes(dist);
 CREATE        INDEX pass_distversion     ON passes(distversion);
-CREATE        INDEX pass_normdistversion ON passes(normdistversion);
 CREATE        INDEX pass_perl            ON passes(perl);
 CREATE        INDEX pass_osname          ON passes(osname);
+
+CREATE UNIQUE INDEX passes_uniq_dist_distversion_perl_osname ON passes (dist, distversion, perl, osname);
 
 CREATE UNIQUE INDEX passid_idx ON passes(id);
 CREATE UNIQUE INDEX dists_idx ON dists(dist, distversion);
