@@ -2,11 +2,11 @@ MAILTO=david@cantrell.org.uk
 
 # m h  dom mon dow   command
 
-# rsync --exclude=CHECKSUMS -qrptgx cpantesters.org::backpan/authors/id/ backpan/authors/id/
-0  7 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;time ./importbackpan.pl
+# Sunday 00:00, clear db of any lurking cruft, eg bogus test reports
+0  0 * * 0 time echo 'truncate passes;'|mysql -u root cpXXXan
 
-# Mon - Sat do perl versions and import test results
-45 7 * * 1-6 cd /web/cpxxxan;time ./getcpantestresults.sh;time ./importtestresults.pl;time ./build02packages.pl 5.5.3;time ./build02packages.pl 5.6.2;time ./build02packages.pl 5.8.8;time ./build02packages.pl 5.10.0;/build02packages.pl 5.10.1;time ./build02packages.pl 5.8.9
+# Every day, 01:00, import backpan, download test results, import test results
+0  1 * * * cd /web/cpxxxan;time rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;time ./importbackpan.pl;time ./getcpantestresults.sh;time ./importtestresults.pl
 
-# Sun clean up, import test results, do OS versions
-45 7 * * 0 echo 'truncate passes;'|mysql -u root cpXXXan;cd /web/cpxxxan;time ./getcpantestresults.sh;time ./importtestresults.pl;time ./build02packages.pl netbsd;time ./build02packages.pl irix;time ./build02packages.pl MSWin32;time ./build02packages.pl cygwin;time ./build02packages.pl solaris
+# Every day, 07:00, rebuild everything
+0 7 * * * cd /web/cpxxxan; time ./build02packages.pl 5.5.3;time ./build02packages.pl 5.6.2;time ./build02packages.pl 5.8.8;time ./build02packages.pl 5.10.0;/build02packages.pl 5.10.1;time ./build02packages.pl 5.8.9; time ./build02packages.pl netbsd;time ./build02packages.pl irix;time ./build02packages.pl MSWin32;time ./build02packages.pl cygwin;time ./build02packages.pl solaris
