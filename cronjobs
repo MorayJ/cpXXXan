@@ -9,4 +9,4 @@ MAILTO=david@cantrell.org.uk
 0  1 * * * cd /web/cpxxxan;time rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;time ./importbackpan.pl;time ./getcpantestresults.sh;time ./importtestresults.pl
 
 # Every day, 07:00, rebuild everything
-0 7 * * * cd /web/cpxxxan; time ./build02packages.pl 5.5.3;time ./build02packages.pl 5.6.2;time ./build02packages.pl 5.8.8;time ./build02packages.pl 5.10.0;/build02packages.pl 5.10.1;time ./build02packages.pl 5.8.9; time ./build02packages.pl netbsd;time ./build02packages.pl irix;time ./build02packages.pl MSWin32;time ./build02packages.pl cygwin;time ./build02packages.pl solaris
+0 7 * * * cd /web/cpxxxan; time ./build02packages.pl 5.5.3;time ./build02packages.pl 5.6.2;time ./build02packages.pl 5.8.8;time ./build02packages.pl 5.10.0;time ./build02packages.pl 5.10.1;time ./build02packages.pl 5.8.9; time ./build02packages.pl netbsd;time ./build02packages.pl irix;time ./build02packages.pl MSWin32;time ./build02packages.pl cygwin;time ./build02packages.pl solaris
