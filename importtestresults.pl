@@ -48,7 +48,7 @@ while(my $testresult = $sth->fetchrow_hashref()) {
   }
   unless($counter % 5000) {
     $cpxxxan->commit();
-    print '.';
+    # print '.';
   }
 }
 $cpxxxan->commit();
