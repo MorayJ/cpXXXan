@@ -10,8 +10,10 @@ CREATE        INDEX modules_distdistversion on modules(dist, distversion);
 CREATE TABLE dists (
     dist        VARCHAR(256),
     distversion VARCHAR(24),
-    file        VARCHAR(256)
+    file        VARCHAR(256),
+    filetimestamp DATETIME
 ) ENGINE = 'InnoDB';
+CREATE INDEX dists_filetimestamp ON dists(filetimestamp);
 
 CREATE TABLE passes (
     dist            VARCHAR(256),

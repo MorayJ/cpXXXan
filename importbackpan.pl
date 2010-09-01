@@ -21,7 +21,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 
 my $dbh = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0, PrintError => 0 });
 my $chkexists = $dbh->prepare('SELECT dist FROM dists WHERE dist=? AND distversion=?');
-my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file) VALUES (?, ?, ?)');
+my $insertdist = $dbh->prepare('INSERT INTO dists (dist, distversion, file, filetimestamp) VALUES (?, ?, ?, FROM_UNIXTIME(?))');
 my $insertmod  = $dbh->prepare('INSERT INTO modules (module, modversion, dist, distversion) VALUES (?, ?, ?, ?)');
 
 foreach my $distfile (
@@ -50,11 +50,15 @@ foreach my $distfile (
     my %modules = %{$dist->modules()};
     if($insertdist->execute(
         $dist->dist(), $dist->distversion(),
-        $distfile
+        $distfile,
+	(stat("backpan/authors/id/$distfile"))[9]
     )) {
         printf("DIST:   %s: %s\n", $dist->dist(), $dist->distversion())
 	    if($verbose);
+    } else {
+      print $insertdist->errstr."\n";
     }
+
     foreach(keys %modules) {
         $modules{$_} ||= 0;
 
