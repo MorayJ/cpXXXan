@@ -15,23 +15,46 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
     ? '/web/cpxxxan'
     : '.';
 
-my $perl = shift();
-die("Must specify a perl, eg\n\n  \$ $0 5.6.2\n") unless($perl);
+my($perl, $os, $datetime) = ('') x 3;
 
-my $os = '';
-$os = $perl if($perl =~ /[a-z]/i);
+while(@ARGV) {
+  my $arg = shift();
+  if($arg eq '--perl') {
+    $perl = shift();
+  } elsif($arg eq '--os') {
+    $os = shift();
+  } elsif($arg eq '--datetime') {
+    $datetime = shift();
+  }
+}
+
+if(!$perl && !$os && !$datetime) {
+  die("Must specify a perl, os or datetime\n\n eg\n\n".
+      "\$ $0 --perl 5.6.2\n".
+      "\$ $0 --os solaris\n".
+      "\$ $0 --datetime 2008-10-23Z00:00:00\n\n"
+  );
+}
 
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '');
 
-(my $view = 'relevantpasses'.$os.$perl) =~ s/\W//g;
+(my $view = "relevantreportsO${os}P${perl}D${datetime}") =~ s/\W//g;
 
 my @modules = ();
-my $query = qq{
-  CREATE OR REPLACE VIEW $view AS
-    SELECT * FROM passes WHERE FILTER
-};
-if($os) { $query =~ s/FILTER/osname='$os'/ }
- else   { $query =~ s/FILTER/perl='$perl'/ }
+my $query = join(' ',
+  "CREATE OR REPLACE VIEW $view AS SELECT passes.* FROM",
+  join(', ', 'passes', ($datetime ? 'dists' : ())),
+  'WHERE',
+  join(" AND ",
+    ($perl ?     "passes.perl   = '$perl'" : ()),
+    ($os   ?     "passes.osname = '$os'" : ()),
+    ($datetime ? (
+      "passes.dist = dists.dist",
+      "passes.distversion = dists.distversion",
+      "dists.filetimestamp < '$datetime'"
+    ) : ())
+  )
+);
 
 $cpxxxan->do($query);
 $query = qq{
@@ -65,7 +88,7 @@ foreach my $record (@{$dist_maxdistversion}) {
     }
 }
 
-my $mirror = $os ? $os : $perl;
+(my $mirror = join('-', grep { length($_) } ($perl, $os, $datetime))) =~ s/[^\w.-]//g;
 
 mkdir CPXXXANROOT."/cp${mirror}an";
 mkdir CPXXXANROOT."/cp${mirror}an/modules";
