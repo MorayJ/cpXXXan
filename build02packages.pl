@@ -90,6 +90,10 @@ foreach my $record (@{$dist_maxdistversion}) {
 
 (my $mirror = join('-', grep { length($_) } ($perl, $os, $datetime))) =~ s/[^\w.-]//g;
 
+foreach my $regex (qw(-01-01Z00:00:00 -01Z00:00:00)) {
+  $mirror =~ s/$regex$//;
+}
+
 mkdir CPXXXANROOT."/cp${mirror}an";
 mkdir CPXXXANROOT."/cp${mirror}an/modules";
 mkdir CPXXXANROOT."/cp${mirror}an/authors";
