@@ -60,8 +60,7 @@ foreach my $distfile (
     }
 
     foreach(keys %modules) {
-        $modules{$_} ||= 0;
-
+	next unless(eval { $modules{$_} ||= 0; 1; });
 	if($insertmod->execute($_, $modules{$_}, $dist->dist(), $dist->distversion())) {
             printf("MOD:      %s: %s\n", $_, $modules{$_})
 	        if($verbose);
