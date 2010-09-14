@@ -104,6 +104,7 @@ unlink CPXXXANROOT."/cp${mirror}an/modules/03modlist.data.gz";
 unlink CPXXXANROOT."/cp${mirror}an/authors/id";
 unlink CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 unlink CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
+unlink CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
 
 symlink BACKPAN."/authors/01mailrc.txt.gz",
     CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
@@ -115,6 +116,8 @@ symlink CPXXXANROOT."/other-mirrors.shtml",
     CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 symlink CPXXXANROOT."/src/howitworks.shtml",
     CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
+symlink CPXXXANROOT."/src/spewgzip.pl",
+    CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
 
 open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
     || die("Can't write cp${mirror}an/modules/02packages.details.txt\n");
@@ -141,7 +144,7 @@ my $apacheconf = q{
   AddOutputFilter INCLUDES .shtml
 
   <Directory "/web/cpxxxan/cpX.X.Xan">
-    Options FollowSymLinks Includes
+    Options FollowSymLinks Includes ExecCGI
     AllowOverride None
     Order allow,deny
     Allow from all
