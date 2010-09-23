@@ -6,6 +6,7 @@ MAILTO=david@cantrell.org.uk
 0  0 * * 0 echo 'truncate passes;'|mysql -u root cpXXXan
 
 # Every day, 01:00, import backpan, download test results, import test results
+0  1 * * * /usr/bin/wget -q -O /web/cpxxxan/backpan/authors/RECENT-1W.yaml http://cpan.cpantesters.org/authors/RECENT-1W.yaml
 0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;./importbackpan.pl;./getcpantestresults.sh;./importtestresults.pl;echo -n finish:;date
 
 # Every day, 07:00, rebuild everything

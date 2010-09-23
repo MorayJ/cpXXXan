@@ -100,6 +100,7 @@ mkdir CPXXXANROOT."/cp${mirror}an/authors";
 mkdir CPXXXANROOT."/apache-conf";
 
 unlink CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
+unlink CPXXXANROOT."/cp${mirror}an/authors/RECENT-1W.yaml";
 unlink CPXXXANROOT."/cp${mirror}an/modules/03modlist.data.gz";
 unlink CPXXXANROOT."/cp${mirror}an/authors/id";
 unlink CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
@@ -108,6 +109,8 @@ unlink CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
 
 symlink BACKPAN."/authors/01mailrc.txt.gz",
     CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
+symlink BACKPAN."/authors/RECENT-1W.yaml",
+    CPXXXANROOT."/cp${mirror}an/authors/RECENT-1W.yaml";
 symlink BACKPAN."/modules/03modlist.data.gz",
     CPXXXANROOT."/cp${mirror}an/modules/03modlist.data.gz";
 symlink BACKPAN."/authors/id",
