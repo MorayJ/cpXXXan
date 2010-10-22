@@ -197,12 +197,34 @@ opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT.")\n");
 open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
     || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml");
 print OTHERMIRRORS '<ul>';
+
+my @othermirrors = sort {
+  my($A, $B) = map { lc($_) } ($a, $b);
+  $A =~s/(^cp|an$)//g;
+  $B =~s/(^cp|an$)//g;
+
+  $A =~ /^5/ && $B !~ /^5/ ? -1 :        # cp5* to the top
+  $A !~ /^5/ && $B =~ /^5/ ?  1 :
+  $A =~ /^[12]/ && $B !~ /^[12]/ ?  1 :  # cp[12]* to the bottom
+  $A !~ /^[12]/ && $B =~ /^[12]/ ? -1 :
+
+  $A =~ /^5/ && $B =~ /^5/ ? do {        # two cp5* mirrors
+    my @A = split(/\./, $A);
+    my @B = split(/\./, $B);
+
+    $A[1] <=> $B[1] ||   # numerically sort version
+    $A[2] cmp $B[2];     # alpha-sort point release-os
+  } :
+
+  $A cmp $B;
+} grep { /^cp.+an/ } readdir(DIR);
+
 print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".
   uc(substr($_, 0, 2)).
   lc(substr($_, 2, length($_) - 4)).
   uc(substr($_, -2)).
   "</a>"
-    foreach(sort grep { /^cp.+an/ } readdir(DIR));
+    foreach(@othermirrors);
 print OTHERMIRRORS '</ul>';
 close(OTHERMIRRORS);
 closedir(DIR);
