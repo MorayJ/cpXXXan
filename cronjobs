@@ -18,4 +18,4 @@ MAILTO=david@cantrell.org.uk
 0 7 * * * cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;./build02packages.pl --perl 5.5.3;./build02packages.pl --perl 5.6.2;./build02packages.pl --perl 5.8.8;./build02packages.pl --perl 5.10.0;./build02packages.pl --perl 5.10.1;./build02packages.pl --perl 5.8.9; ./build02packages.pl --os netbsd;./build02packages.pl --os irix;./build02packages.pl --os MSWin32;./build02packages.pl --os cygwin;./build02packages.pl --os solaris;echo -n finish:;date
 
 # 02:00 1st Sun of April, rebuild historical indexes
-0 2 1-7 4 0 cd /web/cpxxxan; Rebuild datetime sites; echo -n start; for i in `seq 2005 2010`; do ./build02packages.pl --datetime $i-01-01Z00:00:00; done;for i in 02 03 04 05 06 07 08 09 10 11; do ././build02packages.pl --datetime 2010-$i-01Z00:00:00; done
+0 2 1-7 4 0 cd /web/cpxxxan; Rebuild datetime sites; echo -n start; for i in `seq 2005 2010`; do ./build02packages.pl --datetime $i-01-01Z00:00:00; done;for i in 02 03 04 05 06 07 08 09 10 11; do ./build02packages.pl --datetime 2010-$i-01Z00:00:00; done
