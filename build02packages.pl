@@ -123,7 +123,7 @@ symlink CPXXXANROOT."/src/spewgzip.pl",
     CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
 
 open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
-    || die("Can't write cp${mirror}an/modules/02packages.details.txt\n");
+    || die("Can't write cp${mirror}an/modules/02packages.details.txt: $!\n");
 print $packagesfile "Description: This is a whitespace-seperated file.\n";
 print $packagesfile "Description: Each line is modulename moduleversion filename.\n";
 print $packagesfile "Line-Count: ".@modules."\n";
@@ -156,7 +156,7 @@ my $apacheconf = q{
 };
 $apacheconf =~ s/X\.X\.X/$mirror/g;
 open(APACHECONF, '>', CPXXXANROOT."/apache-conf/cp${mirror}an.conf")
-    || die("Can't write ".CPXXXANROOT."/apache-conf/cp${mirror}an.conf\n");
+    || die("Can't write ".CPXXXANROOT."/apache-conf/cp${mirror}an.conf: $!\n");
 print APACHECONF $apacheconf;
 close(APACHECONF);
 
@@ -188,14 +188,14 @@ my $indexshtml = q{
   </body></html>};
 $indexshtml =~ s/X\.X\.X/$mirror/g;
 open(INDEXSHTML, '>', CPXXXANROOT."/cp${mirror}an/index.shtml")
-    || die("Can't write ".CPXXXANROOT."/cp${mirror}an/index.shtml\n");
+    || die("Can't write ".CPXXXANROOT."/cp${mirror}an/index.shtml: $!\n");
 print INDEXSHTML $indexshtml;
 close(INDEXSHTML);
 
 chdir(CPXXXANROOT);
-opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT.")\n");
+opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT."): $!\n");
 open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
-    || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml");
+    || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml: $!");
 print OTHERMIRRORS '<ul>';
 
 my @othermirrors = sort {
