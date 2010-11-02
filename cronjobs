@@ -5,9 +5,17 @@ MAILTO=david@cantrell.org.uk
 # Sunday 00:00, clear db of any lurking cruft, eg bogus test reports
 0  0 * * 0 echo 'truncate passes;'|mysql -u root cpXXXan
 
+# every 6 hours rsync backpan
+# NB get the RECENT file at the same time as (or before) rsyncing backpan
+# to avoid stuff not being found by my testers
+0  0,6,12,18 * * * /usr/bin/wget -q -O /web/cpxxxan/backpan/authors/RECENT-1W.yaml http://cpan.cpantesters.org/authors/RECENT-1W.yaml
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::backpan/authors/id/ backpan/authors/id/
+
 # Every day, 01:00, import backpan, download test results, import test results
-0  1 * * * /usr/bin/wget -q -O /web/cpxxxan/backpan/authors/RECENT-1W.yaml http://cpan.cpantesters.org/authors/RECENT-1W.yaml
-0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;rsync -qrptgx --exclude=CHECKSUMS ftp.funet.fi::backpan/authors/id/ backpan/authors/id/;./importbackpan.pl;./getcpantestresults.sh;./importtestresults.pl;echo -n finish:;date
+0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;./importbackpan.pl;./getcpantestresults.sh;./importtestresults.pl;echo -n finish:;date
 
 # Every day, 07:00, rebuild everything
-0 7 * * * cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;./build02packages.pl 5.5.3;./build02packages.pl 5.6.2;./build02packages.pl 5.8.8;./build02packages.pl 5.10.0;./build02packages.pl 5.10.1;./build02packages.pl 5.8.9; ./build02packages.pl netbsd;./build02packages.pl irix;./build02packages.pl MSWin32;./build02packages.pl cygwin;./build02packages.pl solaris;echo -n finish:;date
+0 7 * * * cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;./build02packages.pl --perl 5.5.3;./build02packages.pl --perl 5.6.2;./build02packages.pl --perl 5.8.8;./build02packages.pl --perl 5.10.0;./build02packages.pl --perl 5.10.1;./build02packages.pl --perl 5.8.9; ./build02packages.pl --os netbsd;./build02packages.pl --os irix;./build02packages.pl --os MSWin32;./build02packages.pl --os cygwin;./build02packages.pl --os solaris;echo -n finish:;date
+
+# 02:00 1st Sun of April, rebuild historical indexes
+0 2 1-7 4 0 cd /web/cpxxxan; Rebuild datetime sites; echo -n start; for i in `seq 2005 2010`; do ./build02packages.pl --datetime $i-01-01Z00:00:00; done;for i in 02 03 04 05 06 07 08 09 10 11; do ././build02packages.pl --datetime 2010-$i-01Z00:00:00; done
