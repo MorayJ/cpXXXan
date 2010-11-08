@@ -219,12 +219,37 @@ my @othermirrors = sort {
   $A cmp $B;
 } grep { /^cp.+an/ } readdir(DIR);
 
-print OTHERMIRRORS "<li><a href=http://$_.barnyard.co.uk/>".
-  uc(substr($_, 0, 2)).
-  lc(substr($_, 2, length($_) - 4)).
-  uc(substr($_, -2)).
-  "</a>"
-    foreach(@othermirrors);
-print OTHERMIRRORS '</ul>';
+my $previous = 'xxxxxxan';
+my @substrs = ('ilikepie');
+foreach my $mirror (@othermirrors) {
+  if(substr($mirror, 0, index($previous, 'an')) eq
+     substr($previous, 0, index($previous, 'an'))) {
+    print OTHERMIRRORS '<ul>';
+    push @substrs, substr($previous, 0, index($previous, 'an'));
+  } elsif($previous =~ /^$substrs[-1]/ && $mirror !~ /^$substrs[-1]/) {
+    print OTHERMIRRORS '</ul>';
+    pop @substrs;
+  }
+
+  print OTHERMIRRORS "<li><a href=http://$mirror.barnyard.co.uk/>".
+    uc(substr($mirror, 0, 2)).
+    lc(substr($mirror, 2, length($mirror) - 4)).
+    uc(substr($mirror, -2)).
+    "</a>";
+  if($mirror =~ /^cp(\d{4})an$/ ) {
+    print OTHERMIRRORS " - the CPAN as at $1-01-01 00:00:00";
+  } elsif($mirror =~ /^cp(\d{4})-(\d{2})an$/ ) {
+    print OTHERMIRRORS " - the CPAN as at $1-$2-01 00:00:00";
+  } elsif($mirror =~ /^cp(5\.\d+\.\d+)an$/) {
+    print OTHERMIRRORS " - the bits of the CPAN that work with perl $1";
+  } elsif($mirror =~ /^cp(5\.\d+\.\d+)-(\w+)an$/) {
+    print OTHERMIRRORS " - the bits of the CPAN that work with perl $1 on $2";
+  } elsif($mirror =~ /^cp(\w+)an$/) {
+    print OTHERMIRRORS " - the bits of the CPAN that work on $1";
+  }
+
+  $previous = $mirror;
+}
+print OTHERMIRRORS '</ul>' foreach(@substrs);
 close(OTHERMIRRORS);
 closedir(DIR);
