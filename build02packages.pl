@@ -182,6 +182,7 @@ my $indexshtml = q{
   To use this mirror, point your CPAN.pm config at
   http://cpX.X.Xan.barnyard.co.uk/
   <h1>Other similar mirrors</h1>
+  <p>Is the mirror you want not listed here?  <a href=mailto:david@cantrell.org.uk>Just ask me</a> and I'll create it for you.
   <!--#include virtual="other-mirrors.shtml"-->
   <!--#include virtual="howitworks.shtml"-->
 
