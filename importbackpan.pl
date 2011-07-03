@@ -30,7 +30,7 @@ foreach my $distfile (
     ->name(qr/\.(tar(\.gz|\.bz2)?|tbz|tgz|zip)$/)
     ->in(BACKPAN.'/authors/id')
 ) {
-    my $dist = eval { CPAN::ParseDistribution->new($distfile); };
+    my $dist = eval { CPAN::ParseDistribution->new($distfile, use_tar => '/bin/tar'); };
     next if($@);
     $distfile =~ s!(??{BACKPAN})/authors/id/!!;
 
