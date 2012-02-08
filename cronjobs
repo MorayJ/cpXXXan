@@ -10,5 +10,5 @@ MAILTO=david@cantrell.org.uk
 # Every day, 01:00, import backpan, download test results, import test results. Takes about 3 hours
 0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;time ./importbackpan.pl;./getcpantestresults.sh;time ./importtestresults.pl;echo -n finish:;date
 
-# Every Sun/Tue/Thu 07:00, rebuild everything. This takes about 20 hours
-0 7 * * 0,2,4 cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;for perl in 5.5.3 5.6.2 5.8.1 5.8.3 5.8.5 5.8.8 5.8.9 5.10.0 5.10.1 5.12.0 5.12.1 5.12.2 5.12.3 5.12.4 5.14.0; do ./build02packages.pl --perl $perl; done; for os in netbsd irix MSWin32 cygwin solaris; do ./build02packages.pl --os $os; done;./build02packages.pl --perl 5.8.8 --os irix;echo -n finish:;date
+# Every Sun/Wed 07:00, rebuild everything. This takes about 20 hours
+0 7 * * 0,3 cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;for perl in 5.5.3 5.6.2 5.8.1 5.8.3 5.8.5 5.8.8 5.8.9 5.10.0 5.10.1 5.12.0 5.12.1 5.12.2 5.12.3 5.12.4 5.14.0; do ./build02packages.pl --perl $perl; done; for os in netbsd irix MSWin32 cygwin solaris; do ./build02packages.pl --os $os; done;./build02packages.pl --perl 5.8.8 --os irix;echo -n finish:;date
