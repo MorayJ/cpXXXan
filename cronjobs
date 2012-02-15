@@ -6,7 +6,7 @@ MAILTO=david@cantrell.org.uk
 # NB get the RECENT file at the same time as (or before) rsyncing backpan
 # to avoid stuff not being found by my testers
 0  0,6,12,18 * * * /usr/bin/wget -q -O /web/cpxxxan/backpan/authors/RECENT-1W.yaml http://cpan.cpantesters.org/authors/RECENT-1W.yaml
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::backpan/authors/id/ backpan/authors/id/
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 # Every day, 01:00, import backpan, download test results, import test results. Takes about 3 hours
 0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;time ./importbackpan.pl;./getcpantestresults.sh;time ./importtestresults.pl;echo -n finish:;date
 
