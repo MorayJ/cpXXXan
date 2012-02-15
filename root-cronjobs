@@ -1,0 +1,5 @@
+MAILTO=david@cantrell.org.uk
+
+# m h  dom mon dow   command
+22 * * * * /usr/sbin/ntpdate time.euro.apple.com>/dev/null
+0 8 * * * /etc/init.d/apache2 reload
