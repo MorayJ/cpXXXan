@@ -136,7 +136,7 @@ close($packagesfile);
 system(qw(gzip -9f), "cp${mirror}an/modules/02packages.details.txt");
 
 my $apacheconf = q{
-<VirtualHost cpX.X.Xan.barnyard.co.uk>
+<VirtualHost cpX.X.Xan.barnyard.co.uk cpX.X.Xan.uk2.barnyard.co.uk>
   CustomLog logs/cpX.X.Xan.barnyard.co.uk-access_log combined
   ErrorLog /var/log/apache2/cpX.X.Xan.barnyard.co.uk-error_log
   DocumentRoot "/web/cpxxxan/cpX.X.Xan"
