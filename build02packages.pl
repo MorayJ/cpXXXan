@@ -95,6 +95,7 @@ foreach my $regex (qw(-01-01Z000000 -01Z000000)) {
 }
 
 mkdir CPXXXANROOT."/cp${mirror}an";
+mkdir CPXXXANROOT."/cpxxxan";
 mkdir CPXXXANROOT."/cp${mirror}an/modules";
 mkdir CPXXXANROOT."/cp${mirror}an/authors";
 mkdir CPXXXANROOT."/apache-conf";
@@ -116,11 +117,11 @@ symlink BACKPAN."/modules/03modlist.data.gz",
 symlink BACKPAN."/authors/id",
     CPXXXANROOT."/cp${mirror}an/authors/id";
 symlink CPXXXANROOT."/other-mirrors.shtml",
+    CPXXXANROOT."/cpxxxan/other-mirrors.shtml";
+symlink CPXXXANROOT."/other-mirrors.shtml",
     CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 symlink CPXXXANROOT."/src/howitworks.shtml",
     CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
-symlink CPXXXANROOT."/src/spewgzip.pl",
-    CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
 
 open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
     || die("Can't write cp${mirror}an/modules/02packages.details.txt: $!\n");
@@ -133,7 +134,7 @@ print $packagesfile sprintf(
     "%s %s %s\n", $_->{module}, $_->{modversion}, $_->{'file'}
 ) foreach (sort { $a->{module} cmp $b->{module} } @modules);
 close($packagesfile);
-system(qw(gzip -9f), "cp${mirror}an/modules/02packages.details.txt");
+system("gzip -9fc cp${mirror}an/modules/02packages.details.txt > cp${mirror}an/modules/02packages.details.txt.gz");
 
 my $apacheconf = q{
 <VirtualHost cpX.X.Xan.barnyard.co.uk cpX.X.Xan.uk2.barnyard.co.uk>
@@ -192,6 +193,11 @@ open(INDEXSHTML, '>', CPXXXANROOT."/cp${mirror}an/index.shtml")
     || die("Can't write ".CPXXXANROOT."/cp${mirror}an/index.shtml: $!\n");
 print INDEXSHTML $indexshtml;
 close(INDEXSHTML);
+
+open(CPXXXANINDEXSHTML, '>', CPXXXANROOT."/cpxxxan/index.shtml")
+    || die("Can't write ".CPXXXANROOT."/cpxxxan/index.shtml: $!\n");
+print CPXXXANINDEXSHTML '<html><head><title>cpXXXan: the Comprehensive Perl $whatever Archive Network</title></head><body><h1>Welcome to the Comprehensive Perl $whatever Archive Network</h1><p>Please visit whichever of the following looks the most delicious:<!--#include virtual="other-mirrors.shtml"--></body></html>';
+close(CPXXXANINDEXSHTML);
 
 chdir(CPXXXANROOT);
 opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT."): $!\n");
