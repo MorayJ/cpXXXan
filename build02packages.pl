@@ -224,7 +224,7 @@ my @othermirrors = sort {
   } :
 
   $A cmp $B;
-} grep { /^cp.+an/ } readdir(DIR);
+} grep { /^cp.+an/ && $_ !~ ne 'cpxxxan' } readdir(DIR);
 
 my $previous = 'xxxxxxan';
 my @substrs = ('ilikepie');
