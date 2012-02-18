@@ -201,11 +201,8 @@ close(CPXXXANINDEXSHTML);
 
 chdir(CPXXXANROOT);
 opendir(DIR, '.') || die("Can't readdir(".CPXXXANROOT."): $!\n");
-open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
-    || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml: $!");
-print OTHERMIRRORS '<ul>';
 
-my @othermirrors = sort {
+my @othermirrors = map { my $f = $_; $f =~ s/(^cp|an$)//g; $f; } sort {
   my($A, $B) = map { lc($_) } ($a, $b);
   $A =~s/(^cp|an$)//g;
   $B =~s/(^cp|an$)//g;
@@ -226,37 +223,46 @@ my @othermirrors = sort {
   $A cmp $B;
 } grep { /^cp.+an/ && $_ ne 'cpxxxan' } readdir(DIR);
 
-my $previous = 'xxxxxxan';
-my @substrs = ('ilikepie');
-foreach my $mirror (@othermirrors) {
-  if(substr($mirror, 0, index($previous, 'an')) eq
-     substr($previous, 0, index($previous, 'an'))) {
-    print OTHERMIRRORS '<ul>';
-    push @substrs, substr($previous, 0, index($previous, 'an'));
-  } elsif($previous =~ /^$substrs[-1]/ && $mirror !~ /^$substrs[-1]/) {
-    print OTHERMIRRORS '</ul>';
-    pop @substrs;
-  }
+open(OTHERMIRRORS, '>', 'other-mirrors.shtml')
+    || die("Can't write ".CPXXXANROOT."/other-mirrors.shtml: $!");
 
-  print OTHERMIRRORS "<li><a href=http://$mirror.barnyard.co.uk/>".
-    uc(substr($mirror, 0, 2)).
-    lc(substr($mirror, 2, length($mirror) - 4)).
-    uc(substr($mirror, -2)).
-    "</a>";
-  if($mirror =~ /^cp(\d{4})an$/ ) {
-    print OTHERMIRRORS " - the CPAN as at $1-01-01 00:00:00";
-  } elsif($mirror =~ /^cp(\d{4})-(\d{2})an$/ ) {
-    print OTHERMIRRORS " - the CPAN as at $1-$2-01 00:00:00";
-  } elsif($mirror =~ /^cp(5\.\d+\.\d+)an$/) {
-    print OTHERMIRRORS " - the bits of the CPAN that work with perl $1";
-  } elsif($mirror =~ /^cp(5\.\d+\.\d+)-(\w+)an$/) {
-    print OTHERMIRRORS " - the bits of the CPAN that work with perl $1 on $2";
-  } elsif($mirror =~ /^cp(\w+)an$/) {
-    print OTHERMIRRORS " - the bits of the CPAN that work on $1";
-  }
+my @versionmirrors     = grep {       /^5\.\d+\.\d+$/ } @othermirrors;
+   @othermirrors       = grep { $_ !~ /^5\.\d+\.\d+$/ } @othermirrors;
+my @versionplusmirrors = grep {       /^5\.\d+\.\d+-.*$/ } @othermirrors;
+   @othermirrors       = grep { $_ !~ /^5\.\d+\.\d+-.*$/ } @othermirrors;
+my @osmirrors          = grep {       /^\D.*$/ } @othermirrors;
+   @othermirrors       = grep { $_ !~ /^\D.*$/ } @othermirrors;
 
-  $previous = $mirror;
+print OTHERMIRRORS "<ul><li><h2>for versions of perl ...</h2>\n";
+print OTHERMIRRORS join(' | ',
+  map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @versionmirrors)."\n";
+
+print OTHERMIRRORS "<li><h2>for versions of perl and a particular OS ...</h2>\n";
+print OTHERMIRRORS join(' | ',
+  map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @versionplusmirrors)."\n";
+
+print OTHERMIRRORS "<li><h2>for a particular OS, never mind what version of perl</h2>\n";
+print OTHERMIRRORS join(' | ',
+  map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @osmirrors)."\n";
+
+# all that's left is date/times
+print OTHERMIRRORS "<li><h2>the CPAN at particular points in time</h2>\n";
+my %years;
+foreach my $date (@othermirrors) {
+  push @{$years{substr($date, 0, 4)}}, $date;
 }
-print OTHERMIRRORS '</ul>' foreach(@substrs);
+foreach my $year (sort keys %years) {
+  print OTHERMIRRORS "<p><strong>$year:</strong> ";
+  print OTHERMIRRORS join(' | ',
+    map {
+      my $text =
+        $_ =~ /^(\d{4})$/         ? "$1-01-01 00:00:00" :
+        $_ =~ /^(\d{4})-(\d{2})$/ ? "$1-$2-01 00:00:00" :
+                                    $_;
+      "<a href=http://cp${_}an.barnyard.co.uk/>$text</a>"
+    } @{$years{$year}})."\n";
+}
+
+print OTHERMIRRORS '</ul>';
 close(OTHERMIRRORS);
 closedir(DIR);
