@@ -17,7 +17,7 @@ foreach my $arg (@ARGV) {
   my $output = "$arg: ".localtime()." - ";
   my $start = time();
   system("$build_script $arg");
-  print "  $output".localtime()."; secs: ".sprintf("%.2f", time() - $start)."\n";
+  print "  $output".localtime()."; secs: ".(time() - $start)."\n";
   $par->finish();
 }
 $par->wait_all_children();
