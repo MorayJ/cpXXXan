@@ -2,11 +2,7 @@ MAILTO=david@cantrell.org.uk
 
 # m h  dom mon dow   command
 
-# # NB get the RECENT file at the same time as (or before) rsyncing backpan
-# # to avoid stuff not being found by my testers
-# 0  0,6,12,18 * * * /usr/bin/wget -q -O /web/cpxxxan/backpan/authors/RECENT-1W.yaml http://cpan.cpantesters.org/authors/RECENT-1W.yaml
-
-# every 6 hours rsync backpan
+# every 6 hours rsync backpan. RECENT-* is used by my 5.6.2 tester
 0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/RECENT* backpan/authors/
 0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 
@@ -14,4 +10,5 @@ MAILTO=david@cantrell.org.uk
 0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;time ./importbackpan.pl;./getcpantestresults.sh;time ./importtestresults.pl;echo -n finish:;date
 
 # Every Sun/Wed 07:00, rebuild everything. Takes two days-ish
-0 7 * * 0,3 cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;for perl in 5.5.3 5.6.2 5.8.1 5.8.3 5.8.5 5.8.8 5.8.9 5.10.0 5.10.1 5.12.0 5.12.1 5.12.2 5.12.3 5.12.4 5.14.0 5.14.1 5.14.2; do ./build02packages.pl --perl $perl; done; for os in netbsd irix MSWin32 cygwin solaris; do ./build02packages.pl --os $os; done;./build02packages.pl --perl 5.8.8 --os irix;echo -n finish:;date
+0 7 * * 0,3 cd /web/cpxxxan; echo Rebuild sites;echo -n start:;date;for perl in 5.5.3 5.6.2 5.8.1 5.8.3 5.8.5 5.8.8 5.8.9 5.10.0 5.10.1 5.12.0 5.12.1 5.12.2 5.12.3 5.12.4 5.14.0 5.14.1 5.14.2; do echo $perl ...; time ./build02packages.pl --perl $perl; done; for os in netbsd irix MSWin32 cygwin solaris; do echo $od ...; time ./build02packages.pl --os $os; done; echo 5.8.8-irix ...; time ./build02packages.pl --perl 5.8.8 --os irix;echo -n finish:;date
+
