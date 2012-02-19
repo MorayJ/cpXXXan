@@ -122,6 +122,10 @@ symlink CPXXXANROOT."/other-mirrors.shtml",
     CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 symlink CPXXXANROOT."/src/howitworks.shtml",
     CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
+symlink CPXXXANROOT."/src/header.shtml",
+    CPXXXANROOT."/cp${mirror}an/header.shtml";
+symlink CPXXXANROOT."/src/header.shtml",
+    CPXXXANROOT."/cpxxxan/header.shtml";
 
 open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
     || die("Can't write cp${mirror}an/modules/02packages.details.txt: $!\n");
@@ -165,20 +169,7 @@ my $indexshtml = q{
   <html><head><title>
     CPX.X.XAN: the Comprehensive Perl X.X.X Archive Network
   </title></head><body>
-  <TABLE ALIGN=RIGHT><TR><TD WIDTH=100 ALIGN=CENTER>
-    <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-      <input type="hidden" name="cmd" value="_xclick">
-      <input type="hidden" name="business" value="david@cantrell.org.uk">
-      <input type="hidden" name="item_name" value="CPX.X.XAN">
-      <input type="hidden" name="no_note" value="1">
-      <input type="hidden" name="currency_code" value="EUR">
-      <input type="hidden" name="tax" value="0">
-      <input type="image" src="https://www.paypal.com/images/x-click-butcc-donate.gif" border="0" name="submit" alt="Make payments with PayPal">
-    </form>
-  </TD></TR></TABLE>
-  <p>
-    <a href=https://github.com/DrHyde/cpXXXan>Source code</a> |
-    <a href=mailto:david@cantrell.org.uk?Subject=cpX.X.Xan%20bug%20report>Report bugs</a>
+  <!--#include virtual="header.shtml"-->
   <h1>Welcome to CPX.X.XAN</h1>
   To use this mirror, point your CPAN.pm config at
   http://cpX.X.Xan.barnyard.co.uk/
@@ -196,7 +187,7 @@ close(INDEXSHTML);
 
 open(CPXXXANINDEXSHTML, '>', CPXXXANROOT."/cpxxxan/index.shtml")
     || die("Can't write ".CPXXXANROOT."/cpxxxan/index.shtml: $!\n");
-print CPXXXANINDEXSHTML '<html><head><title>cpXXXan: the Comprehensive Perl $whatever Archive Network</title></head><body><h1>Welcome to the Comprehensive Perl $whatever Archive Network</h1><p>Please visit whichever of the following looks the most delicious:<!--#include virtual="other-mirrors.shtml"--></body></html>';
+print CPXXXANINDEXSHTML '<html><head><title>cpXXXan: the Comprehensive Perl $whatever Archive Network</title></head><body><!--#include virtual="header.shtml"--><h1>Welcome to the Comprehensive Perl $whatever Archive Network</h1><p>Please visit whichever of the following looks the most delicious:<!--#include virtual="other-mirrors.shtml"--></body></html>';
 close(CPXXXANINDEXSHTML);
 
 chdir(CPXXXANROOT);
