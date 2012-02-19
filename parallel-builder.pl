@@ -11,6 +11,7 @@ my $par = Parallel::ForkManager->new(2);
 print "start: ".localtime()."\n";
 my $start = time();
 foreach my $arg (@ARGV) {
+  $arg =~ s/'//g;
   $par->start() && next;
 
   my $output = "$arg: ".localtime()." - ";
