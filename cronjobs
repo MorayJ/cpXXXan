@@ -2,12 +2,14 @@ MAILTO=david@cantrell.org.uk
 
 # m h  dom mon dow   command
 
-# every 6 hours rsync backpan. RECENT-* is used by my 5.6.2 tester
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/RECENT* backpan/authors/
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
+# every 6 hours rsync backpan. RECENT-* is used by my 5.6.2 tester, clients also need 01mailrc
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -vrptgx cpan.cpantesters.org::CPAN/authors/RECENT* backpan/authors/
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -vrptgx cpan.cpantesters.org::CPAN/authors/01mailrc.txt.gz backpan/authors/
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -vrptgx cpan.cpantesters.org::CPAN/modules/03modlist.data.gz backpan/modules/
+0  0,6,12,18 * * * cd /web/cpxxxan;rsync -vrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 
 # Every day, 01:00, import backpan, download test results, import test results. Takes about 3 hours
 0  1 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date;time ./importbackpan.pl;./getcpantestresults.sh;time ./importtestresults.pl;echo -n finish:;date
 
-# Every Sun/Wed 07:00, rebuild everything. Takes two days-ish
-0 7 * * 0,3 cd /web/cpxxxan; ./parallel-builder.pl ./build02packages.pl '--os netbsd' '--os irix' '--os MSWin32' '--os cygwin' '--os solaris' '--perl 5.8.8 --os irix' '--perl 5.5.3' '--perl 5.6.2' '--perl 5.8.1' '--perl 5.8.3' '--perl 5.8.5' '--perl 5.8.8' '--perl 5.8.9' '--perl 5.10.0' '--perl 5.10.1' '--perl 5.12.0' '--perl 5.12.1' '--perl 5.12.2' '--perl 5.12.3' '--perl 5.12.4' '--perl 5.14.0' '--perl 5.14.1' '--perl 5.14.2'
+# Every Mon/Thu 07:00, rebuild everything. Takes two days-ish
+0 7 * * 1,4 cd /web/cpxxxan; ./parallel-builder.pl ./build02packages.pl '--os netbsd' '--os irix' '--os MSWin32' '--os cygwin' '--os solaris' '--perl 5.8.8 --os irix' '--perl 5.5.3' '--perl 5.6.2' '--perl 5.8.1' '--perl 5.8.3' '--perl 5.8.5' '--perl 5.8.8' '--perl 5.8.9' '--perl 5.10.0' '--perl 5.10.1' '--perl 5.12.0' '--perl 5.12.1' '--perl 5.12.2' '--perl 5.12.3' '--perl 5.12.4' '--perl 5.14.0' '--perl 5.14.1' '--perl 5.14.2'
