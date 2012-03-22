@@ -187,7 +187,7 @@ close(INDEXSHTML);
 
 open(CPXXXANINDEXSHTML, '>', CPXXXANROOT."/cpxxxan/index.shtml")
     || die("Can't write ".CPXXXANROOT."/cpxxxan/index.shtml: $!\n");
-print CPXXXANINDEXSHTML '<html><head><title>cpXXXan: the Comprehensive Perl $whatever Archive Network</title></head><body><!--#include virtual="header.shtml"--><h1>Welcome to the Comprehensive Perl $whatever Archive Network</h1><p>Please visit whichever of the following looks the most delicious:<!--#include virtual="other-mirrors.shtml"--></body></html>';
+print CPXXXANINDEXSHTML '<html><head><title>cpXXXan: the Comprehensive Perl $whatever Archive Network</title></head><body><!--#include virtual="header.shtml"--><h1>Welcome to the Comprehensive Perl $whatever Archive Network</h1><p>Please visit whichever of the following looks the most delicious - and if you want isn't here, <a href=mailto:david@cantrell.org.uk>just ask</a>:<!--#include virtual="other-mirrors.shtml"--></body></html>';
 close(CPXXXANINDEXSHTML);
 
 chdir(CPXXXANROOT);
