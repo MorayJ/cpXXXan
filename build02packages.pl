@@ -225,15 +225,15 @@ my @osmirrors          = grep {       /^\D.*$/ } @othermirrors;
    @othermirrors       = grep { $_ !~ /^\D.*$/ } @othermirrors;
 
 print OTHERMIRRORS "<ul><li><h2>for versions of perl ...</h2>\n";
-print OTHERMIRRORS join(' | ',
+print OTHERMIRRORS join('&nbsp;| ',
   map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @versionmirrors)."\n";
 
 print OTHERMIRRORS "<li><h2>for versions of perl and a particular OS ...</h2>\n";
-print OTHERMIRRORS join(' | ',
+print OTHERMIRRORS join('&nbsp;| ',
   map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @versionplusmirrors)."\n";
 
 print OTHERMIRRORS "<li><h2>for a particular OS, never mind what version of perl</h2>\n";
-print OTHERMIRRORS join(' | ',
+print OTHERMIRRORS join('&nbsp;| ',
   map { "<a href=http://cp${_}an.barnyard.co.uk/>$_</a>" } @osmirrors)."\n";
 
 # all that's left is date/times
@@ -244,7 +244,7 @@ foreach my $date (@othermirrors) {
 }
 foreach my $year (sort keys %years) {
   print OTHERMIRRORS "<p><strong>$year:</strong> ";
-  print OTHERMIRRORS join(' | ',
+  print OTHERMIRRORS join('&nbsp;| ',
     map {
       my $text =
         $_ =~ /^(\d{4})$/         ? "$1-01-01 00:00:00" :
