@@ -1,3 +1,5 @@
+-- cpxxxan database
+
 CREATE TABLE modules (
     module          VARCHAR(256),
     modversion      VARCHAR(24),
@@ -34,3 +36,18 @@ CREATE UNIQUE INDEX passes_uniq_dist_distversion_perl_osname ON passes (dist, di
 CREATE UNIQUE INDEX dists_idx ON dists(dist, distversion);
 CREATE UNIQUE INDEX modules_idx ON modules(module, modversion, dist, distversion);
 CREATE UNIQUE INDEX files_idx ON dists(file);
+
+-- cpantesters database
+
+CREATE TABLE `cpanstats` (
+  `id` int(11) NOT NULL,
+  `guid` varchar(32) DEFAULT NULL,
+  `state` varchar(16) DEFAULT NULL,
+  `dist` varchar(128) DEFAULT NULL,
+  `version` varchar(32) DEFAULT NULL,
+  `perl` varchar(32) DEFAULT NULL,
+  `platform` varchar(32) DEFAULT NULL,
+  `osname` varchar(64) DEFAULT NULL,
+  `osvers` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
