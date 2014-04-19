@@ -20,7 +20,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:mysql:database=cpantesters', 'root', '');
 
-my $sth = $testresults->prepare(q{SELECT dist, version, perl, osname FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
+my $sth = $testresults->prepare(q{SELECT distinct dist, version, perl, osname FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
 $sth->execute();
 
 my $insert = $cpxxxan->prepare('
