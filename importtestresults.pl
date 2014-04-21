@@ -31,7 +31,11 @@ $insert->{PrintWarn} = $insert->{PrintError} = 0;
 # foreach my $testresult (@{$results}) {
 my $counter = 0;
 while(my $testresult = $sth->fetchrow_hashref()) {
-  if($testresult->{version} !~ /_/ && $testresult->{perl} !~ /[^\d.]/) {
+  if(
+    $testresult->{version} !~ /(trial|_)/i && # non-indexed dists
+    $testresult->{perl} ne '0' &&             # buggy reports?
+    $testresult->{perl} !~ /[^\d.]/           # not interested in patched or rc perls
+  ) {
     $insert->execute(
       $testresult->{dist}, $testresult->{version},
       eval { no warnings; version->new($testresult->{version})->numify() } || 0,
