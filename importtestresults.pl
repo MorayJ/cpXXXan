@@ -20,7 +20,7 @@ use constant CPXXXANROOT => -e '/web/cpxxxan'
 my $cpxxxan = DBI->connect('dbi:mysql:database=cpXXXan', 'root', '', { AutoCommit => 0 });
 my $testresults = DBI->connect('dbi:mysql:database=cpantesters', 'root', '');
 
-my $sth = $testresults->prepare(q{SELECT distinct dist, version, perl, osname FROM cpanstats WHERE state='pass' AND perl NOT LIKE '%patch%'});
+my $sth = $testresults->prepare(q{SELECT distinct dist, version, perl, osname FROM cpanstats WHERE state='pass'});
 $sth->execute();
 
 my $insert = $cpxxxan->prepare('
@@ -31,7 +31,7 @@ $insert->{PrintWarn} = $insert->{PrintError} = 0;
 # foreach my $testresult (@{$results}) {
 my $counter = 0;
 while(my $testresult = $sth->fetchrow_hashref()) {
-  if($testresult->{version} !~ /_/) {
+  if($testresult->{version} !~ /_/ && $testresult->{perl} !~ /[^\d.]/) {
     $insert->execute(
       $testresult->{dist}, $testresult->{version},
       eval { no warnings; version->new($testresult->{version})->numify() } || 0,
@@ -47,6 +47,7 @@ while(my $testresult = $sth->fetchrow_hashref()) {
     );
   }
   unless($counter % 5000) {
+    print '.';
     $cpxxxan->commit();
   }
 }
