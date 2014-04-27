@@ -26,7 +26,7 @@ $sth->execute();
 my $insert = $cpxxxan->prepare('
     INSERT INTO passes (dist, distversion, normdistversion, perl, osname) VALUES (?, ?, ?, ?, ?)
 ');
-$insert->{PrintWarn} = $insert->{PrintError} = 0;
+$insert->{PrintWarn} = $insert->{PrintError} = 1;
 
 # foreach my $testresult (@{$results}) {
 my $counter = 0;
