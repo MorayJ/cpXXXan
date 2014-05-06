@@ -154,7 +154,7 @@ my($sth,$current_max_id);
     }
     my(@row) = $sth->fetchrow_array();
     $current_max_id = $row[0] || 0;
-    print "INFO: In cpantesters db found max id '$current_max_id'" if($verbosity == 2);
+    print "$0: INFO: In cpantesters db found max id '$current_max_id'" if($verbosity == 2);
     $sql = "INSERT INTO cpanstats
  (id,guid,state,dist,version,platform,perl,osname,osvers) values
  (?, ?,   ?,    ?,   ?,      ?,       ?,   ?,     ?)";
@@ -166,11 +166,11 @@ $nextid = $current_max_id+1;
 my($inscount) = 0;
 my($queries_n,$queries_time) = (0,0);
 QUERY: while () {
-    print sprintf "%s: Next query starting with %s\n", scalar gmtime(), $nextid if($verbosity == 2);
+    print sprintf "$0: %s: Next query starting with %s\n", scalar gmtime(), $nextid if($verbosity == 2);
     my $result = $query->range("$nextid-");
     my $querycnt = keys %$result;
     my $thismax = $querycnt > 0 ? max(keys %$result) : undef;
-    print sprintf "%s: Got %d records from '%s' to '%s'\n", scalar gmtime(), $querycnt, $nextid, $thismax||"<UNDEF>" if($verbosity == 2);
+    print sprintf "$0: %s: Got %d records from '%s' to '%s'\n", scalar gmtime(), $querycnt, $nextid, $thismax||"<UNDEF>" if($verbosity == 2);
     if (defined($Opt{maxins}) && $Opt{maxins} <= 0) {
         last QUERY;
     }
@@ -239,7 +239,7 @@ QUERY: while () {
         print $fh $jsonxs->encode($record), "\n";
         $i++;
         if (time >= $next_log) {
-            print sprintf "%s: %d records inserted\n", scalar gmtime(), $i if($verbosity == 2);
+            print sprintf "$0: %s: %d records inserted\n", scalar gmtime(), $i if($verbosity == 2);
             $next_log += 60;
         }
         $inscount++;
@@ -267,7 +267,7 @@ QUERY: while () {
     $nextid = $thismax+1;
 }
 if ($queries_n) {
-    print sprintf "STATS: %s inserts, avg ins time per rec %.5f\n", $queries_n, $queries_time/$queries_n if($verbosity != 0);
+    print sprintf "$0: STATS: %s inserts, avg ins time per rec %.5f\n", $queries_n, $queries_time/$queries_n if($verbosity != 0);
 }
 
 # for the record: today I added the two:
