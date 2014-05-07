@@ -1,5 +1,11 @@
 -- cpxxxan database
 
+CREATE TABLE cache (
+    `key`   VARCHAR(32),
+    `value` VARCHAR(32),
+    PRIMARY KEY (`key`)
+) ENGINE = 'InnoDB';
+
 CREATE TABLE modules (
     module          VARCHAR(256),
     modversion      VARCHAR(24),
@@ -7,7 +13,7 @@ CREATE TABLE modules (
     dist            VARCHAR(256),
     distversion     VARCHAR(24)
 ) ENGINE = 'InnoDB';
-CREATE        INDEX modules_distdistversion on modules(dist, distversion);
+CREATE INDEX modules_distdistversion on modules(dist, distversion);
 
 CREATE TABLE dists (
     dist        VARCHAR(256),
@@ -24,12 +30,11 @@ CREATE TABLE passes (
     perl            VARCHAR(8),
     osname          VARCHAR(16)
 ) ENGINE = 'InnoDB';
-
-CREATE        INDEX pass_normdistversion ON passes(normdistversion);
-CREATE        INDEX pass_dist            ON passes(dist);
-CREATE        INDEX pass_distversion     ON passes(distversion);
-CREATE        INDEX pass_perl            ON passes(perl);
-CREATE        INDEX pass_osname          ON passes(osname);
+CREATE INDEX pass_normdistversion ON passes(normdistversion);
+CREATE INDEX pass_dist            ON passes(dist);
+CREATE INDEX pass_distversion     ON passes(distversion);
+CREATE INDEX pass_perl            ON passes(perl);
+CREATE INDEX pass_osname          ON passes(osname);
 
 CREATE UNIQUE INDEX passes_uniq_dist_distversion_perl_osname ON passes (dist, distversion, perl, osname);
 

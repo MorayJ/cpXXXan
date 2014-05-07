@@ -154,7 +154,7 @@ my($sth,$current_max_id);
     }
     my(@row) = $sth->fetchrow_array();
     $current_max_id = $row[0] || 0;
-    print "$0: INFO: In cpantesters db found max id '$current_max_id'" if($verbosity == 2);
+    print "$0: INFO: In cpantesters db found max id '$current_max_id'\n" if($verbosity == 2);
     $sql = "INSERT INTO cpanstats
  (id,guid,state,dist,version,platform,perl,osname,osvers) values
  (?, ?,   ?,    ?,   ?,      ?,       ?,   ?,     ?)";
