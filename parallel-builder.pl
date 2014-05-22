@@ -8,9 +8,14 @@ use DBM::Deep;
 my $build_script = shift(@ARGV);
 
 my $par = Parallel::ForkManager->new(2);
-my $db  = DBM::Deep->new(
+my $db_dbm  = DBM::Deep->new(
     file => "/tmp/parallel-builder-history.db",
 );
+
+# clone into memory to avoid fork()y hatefulness
+my $db = { map { $_ => $db_dbm->{$_} } keys %{$db_dbm} };
+
+undef $db_dbm;
 
 # order jobs by how long they took last time (assuming 0
 # seconds if not seen before), longest first
@@ -35,3 +40,8 @@ $par->wait_all_children();
 
 print "finish:  ".localtime()."\n";
 print "elapsed: ".sprintf("%.2f mins == %d secs\n", (time() - $start)/60, time() - $start);
+
+$db_dbm  = DBM::Deep->new(
+    file => "/tmp/parallel-builder-history.db",
+);
+$db_dbm->{$_} = $db->{$_} foreach (keys%{$db});
