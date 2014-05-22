@@ -7,7 +7,7 @@ use DBM::Deep;
 
 my $build_script = shift(@ARGV);
 
-my $par = Parallel::ForkManager->new(2);
+my $par = Parallel::ForkManager->new(2, '/tmp');
 my $db_dbm  = DBM::Deep->new(
     file => "/tmp/parallel-builder-history.db",
 );
@@ -26,15 +26,21 @@ my @jobs = sort {
 
 print "start: ".localtime()."\n";
 my $start = time();
+
+$par->run_on_finish(sub {
+    my(undef, undef, undef, undef, undef, $data) = @_;
+    $db->{$data->{job}} = $data->{elapsed};
+});
+
 foreach my $job (@jobs) {
   $par->start() && next;
 
   my $output = "$job: ".localtime()." - ";
   my $start = time();
   system("$build_script $job");
-  $db->{$job} = time() - $start;
-  print "  $output".localtime()."; secs: ".$db->{$job}."\n";
-  $par->finish();
+  my $elapsed = time() - $start;
+  print "  $output".localtime()."; secs: $elapsed\n";
+  $par->finish(0, { job => $job, elapsed => $elapsed });
 }
 $par->wait_all_children();
 
