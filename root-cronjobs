@@ -2,5 +2,5 @@ MAILTO=david@cantrell.org.uk
 
 # m h  dom mon dow   command
 
-# 12:00 every day, to make new sites magickally appear
-0 12 * * * /etc/init.d/apache2 reload
+# every six hours, to make new sites magickally appear
+0 0,6,12,18 * * * /etc/init.d/apache2 reload >/dev/null
