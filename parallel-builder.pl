@@ -24,7 +24,7 @@ my @jobs = sort {
     (exists($db->{$a}) ? $db->{$a} : 0)
 } map { s/'//g; $_ } @ARGV;
 
-print "start: ".localtime()."\n";
+# print "start: ".localtime()."\n";
 my $start = time();
 
 $par->run_on_finish(sub {
@@ -39,13 +39,13 @@ foreach my $job (@jobs) {
   my $start = time();
   system("$build_script $job");
   my $elapsed = time() - $start;
-  print "  $output".localtime()."; secs: $elapsed\n";
+  # print "  $output".localtime()."; secs: $elapsed\n";
   $par->finish(0, { job => $job, elapsed => $elapsed });
 }
 $par->wait_all_children();
 
-print "finish:  ".localtime()."\n";
-print "elapsed: ".sprintf("%.2f mins == %d secs\n", (time() - $start)/60, time() - $start);
+# print "finish:  ".localtime()."\n";
+# print "elapsed: ".sprintf("%.2f mins == %d secs\n", (time() - $start)/60, time() - $start);
 
 $db_dbm  = DBM::Deep->new(
     file => "/tmp/parallel-builder-history.db",
