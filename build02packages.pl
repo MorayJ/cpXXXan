@@ -136,7 +136,7 @@ print $packagesfile "Last-Updated: ".HTTP::Date::time2str()."\n";
 print $packagesfile "\n";
 print $packagesfile sprintf(
     "%s %s %s\n", $_->{module}, $_->{modversion}, $_->{'file'}
-) foreach (sort { $a->{module} cmp $b->{module} } @modules);
+) foreach (sort { lc($a->{module}) cmp lc($b->{module}) } @modules);
 close($packagesfile);
 system("gzip -9fc cp${mirror}an/modules/02packages.details.txt > cp${mirror}an/modules/02packages.details.txt.gz");
 
