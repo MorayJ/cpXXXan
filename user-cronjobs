@@ -11,9 +11,9 @@ MAILTO=david@cantrell.org.uk
 0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 # 0  3,9,15,21 * * * cd /web/cpxxxan;rsync -qrptgx ftp.nic.funet.fi::backpan/authors/id/ backpan/authors/id/
 
-# 18:00 on 1st of month, backup databases
-0  18 1 * * mysqldump -u root cpantesters>cpantesters-db.backup.sql;gzip -9 cpantesters-db.backup.sql
-0  19 1 * * mysqldump -u root cpXXXan>cpXXXan-db.backup.sql;gzip -9 cpXXXan-db.backup.sql
+# 18:00 on 2nd of month, backup databases
+0  18 2 * * mysqldump -u root cpantesters>cpantesters-db.backup.sql;gzip -9f cpantesters-db.backup.sql
+0  19 2 * * mysqldump -u root cpXXXan>cpXXXan-db.backup.sql;gzip -9f cpXXXan-db.backup.sql
 
 # Every day, 22:00, import backpan, download test results, import test results. Takes about two hours, so ETA 00:00
 0  22 * * * cd /web/cpxxxan;echo Import backpan and test results;echo -n start:;date; ./importbackpan.pl;./refill-cpanstatsdb.pl --quiet --finishlimit=1;./importtestresults.pl;echo -n finish:;date
