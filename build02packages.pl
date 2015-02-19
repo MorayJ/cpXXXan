@@ -107,6 +107,7 @@ unlink CPXXXANROOT."/cp${mirror}an/authors/id";
 unlink CPXXXANROOT."/cp${mirror}an/other-mirrors.shtml";
 unlink CPXXXANROOT."/cp${mirror}an/howitworks.shtml";
 unlink CPXXXANROOT."/cp${mirror}an/spewgzip.pl";
+unlink CPXXXANROOT."/cp${mirror}an/robots.txt";
 
 symlink BACKPAN."/authors/01mailrc.txt.gz",
     CPXXXANROOT."/cp${mirror}an/authors/01mailrc.txt.gz";
@@ -126,6 +127,10 @@ symlink CPXXXANROOT."/src/header.shtml",
     CPXXXANROOT."/cp${mirror}an/header.shtml";
 symlink CPXXXANROOT."/src/header.shtml",
     CPXXXANROOT."/cpxxxan/header.shtml";
+symlink CPXXXANROOT."/src/robots.txt",
+    CPXXXANROOT."/cp${mirror}an/robots.txt";
+symlink CPXXXANROOT."/src/robots.txt",
+    CPXXXANROOT."/cpxxxan/robots.txt";
 
 open(my $packagesfile, '>', "cp${mirror}an/modules/02packages.details.txt")
     || die("Can't write cp${mirror}an/modules/02packages.details.txt: $!\n");
