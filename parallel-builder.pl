@@ -4,6 +4,9 @@ use strict;
 use warnings;
 use Parallel::ForkManager;
 use DBM::Deep;
+use IPC::ConcurrencyLimit;
+
+my $limit = concurrency_limit("/tmp/parallel-builder.lock");
 
 my $build_script = shift(@ARGV);
 
@@ -51,3 +54,17 @@ $db_dbm  = DBM::Deep->new(
     file => "/tmp/parallel-builder-history.db",
 );
 $db_dbm->{$_} = $db->{$_} foreach (keys%{$db});
+
+sub concurrency_limit {
+    my $lockfile = shift;
+    my $limit = IPC::ConcurrencyLimit->new(
+        max_procs => 1,
+        path      => $lockfile,
+    );
+    my $limitid = $limit->get_lock;
+    if(not $limitid) {
+        warn "Another process appears to be still running. Exiting.";
+        exit(0);
+    }
+    return $limit;
+}
