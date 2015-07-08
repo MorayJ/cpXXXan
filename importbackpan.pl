@@ -9,6 +9,23 @@ use File::Find::Rule;
 use DBI;
 use version;
 
+use IPC::ConcurrencyLimit;
+
+sub concurrency_limit {
+    my $lockfile = shift;
+    my $limit = IPC::ConcurrencyLimit->new(
+        max_procs => 1,
+        path      => $lockfile,
+    );
+    my $limitid = $limit->get_lock;
+    if(not $limitid) {
+        warn "Another process appears to be still running. Exiting.";
+        exit(0);
+    }
+    return $limit;
+}
+my $limit = concurrency_limit("/tmp/importbackpan/lock");
+
 my $verbose = (@ARGV && shift() eq '-v') ? 1 : 0;
 
 # Configuration for DRC's laptop and for live

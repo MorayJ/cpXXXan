@@ -5,6 +5,24 @@ use strict;
 
 use DBI;
 
+use IPC::ConcurrencyLimit;
+
+sub concurrency_limit {
+    my $lockfile = shift;
+    my $limit = IPC::ConcurrencyLimit->new(
+        max_procs => 1,
+        path      => $lockfile,
+    );
+    my $limitid = $limit->get_lock;
+    if(not $limitid) {
+        warn "Another process appears to be still running. Exiting.";
+        exit(0);
+    }
+    return $limit;
+}
+my $limit = concurrency_limit("/tmp/importtestresults/lock");
+
+
 $| = 1;
 
 my $verbose = (@ARGV && shift() eq '-v') ? 1 : 0;
