@@ -2,13 +2,12 @@ MAILTO=david@cantrell.org.uk
 
 # m h  dom mon dow   command
 
-# every 6 hours rsync backpan. RECENT-* is used by my 5.6.2 tester, clients also need 01mailrc, 03modlist
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/RECENT* backpan/authors/
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/01mailrc.txt.gz backpan/authors/
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/modules/03modlist.data.gz backpan/modules/
-
+# every 12 hours rsync backpan. RECENT-* is used by my 5.6.2 tester, clients also need 01mailrc, 03modlist
+10  6,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/RECENT* backpan/authors/
+11  6,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/authors/01mailrc.txt.gz backpan/authors/
+12  6,18 * * * cd /web/cpxxxan;rsync -qrptgx cpan.cpantesters.org::CPAN/modules/03modlist.data.gz backpan/modules/
+13  6,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 # funet mirror is down
-0  0,6,12,18 * * * cd /web/cpxxxan;rsync -qrptgx --exclude=CHECKSUMS backpan.cpantesters.org::BACKPAN/authors/id/ backpan/authors/id/
 # 0  3,9,15,21 * * * cd /web/cpxxxan;rsync -qrptgx ftp.nic.funet.fi::backpan/authors/id/ backpan/authors/id/
 
 # 18:00 on 2nd of month, backup databases
